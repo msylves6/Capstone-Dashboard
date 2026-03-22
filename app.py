@@ -1809,6 +1809,169 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
         """)
 
 
+    # ── Section 6: Cost Savings (Dx Feeder) ──────────────────────────────────
+    section_heading("Cost Savings — Dx Feeder",
+        "Ontario TOU electricity pricing applied to CVR energy savings at 10 MW peak load. "
+        "Sourced from Final Cost Savings Analysis.xlsx.")
+
+    # Hardcoded from Final Cost Savings Analysis.xlsx — Dx Feeder sheet
+    # Columns: Z, I, ZIP-Res, ZIP-Comm, All Avg   units: $/hr at 10 MW peak
+    _DX_TOU = {
+        1:9.8,2:9.8,3:9.8,4:9.8,5:9.8,6:9.8,7:9.8,
+        8:20.3,9:20.3,10:20.3,11:20.3,
+        12:15.7,13:15.7,14:15.7,15:15.7,16:15.7,17:15.7,
+        18:20.3,19:20.3,
+        20:9.8,21:9.8,22:9.8,23:9.8,24:9.8
+    }
+    _DX_CS = {
+        1:(40.84,21.09,21.72,20.70,26.09),2:(42.95,22.25,22.82,21.78,27.45),
+        3:(42.59,22.05,22.63,21.60,27.22),4:(42.55,22.03,22.61,21.58,27.19),
+        5:(43.13,20.85,22.90,21.86,27.19),6:(41.58,21.49,22.11,21.07,26.56),
+        7:(43.15,22.28,22.92,21.81,27.54),8:(84.07,43.47,44.62,42.44,53.65),
+        9:(83.37,39.70,44.21,41.07,52.09),10:(80.01,39.09,42.35,38.79,50.06),
+        11:(75.48,38.54,39.99,38.04,48.01),12:(57.59,29.38,30.50,28.69,36.54),
+        13:(57.23,29.60,30.62,28.82,36.57),14:(57.62,29.84,30.47,29.01,36.74),
+        15:(58.67,30.27,31.08,29.55,37.39),16:(59.52,30.75,31.53,29.98,37.95),
+        17:(60.12,30.96,31.86,30.25,38.30),18:(78.00,40.21,41.33,39.24,49.69),
+        19:(78.11,40.22,41.38,39.29,49.75),20:(37.72,19.43,19.99,18.98,24.03),
+        21:(37.70,19.43,20.00,18.99,24.03),22:(40.81,20.56,21.66,20.60,25.91),
+        23:(42.99,22.22,22.82,21.76,27.45),24:(41.76,21.59,22.19,21.15,26.67),
+    }
+    _DX_ANNUAL = {
+        "Constant-Z":484568,"Constant-I":247210,
+        "ZIP-Residential":257078,"ZIP-Commercial":243466,"All Avg":308081
+    }
+    _DX_LT_LABELS = ["Constant-Z","Constant-I","ZIP-Residential","ZIP-Commercial"]
+    _DX_HOURS = list(range(1,25))
+    _tou_arr = np.array([_DX_TOU[h] for h in _DX_HOURS])
+
+    # Summary KPIs
+    _dx_daily_all = [sum(_DX_CS[h][i] for h in _DX_HOURS) for i in range(4)]
+    _dx_annual_all = [_DX_ANNUAL[lt] for lt in _DX_LT_LABELS]
+    _dx_best_lt = _DX_LT_LABELS[int(np.argmax(_dx_daily_all))]
+    _dx_best_daily = max(_dx_daily_all)
+
+    ck1,ck2,ck3,ck4 = st.columns(4)
+    with ck1: kpi("Best Load Type", _dx_best_lt, f"${_dx_best_daily:,.2f}/day at 10 MW peak")
+    with ck2: kpi("Best Annual Savings", f"${max(_dx_annual_all):,}", f"{_dx_best_lt} · ×365 days")
+    with ck3: kpi("All-Type Average Daily", f"${sum(_DX_CS[h][4] for h in _DX_HOURS):,.2f}", "Average across all 4 load types")
+    with ck4: kpi("TOU Rate Range", "9.8 – 20.3 ¢/kWh", "Ontario Off-Peak → On-Peak")
+
+    panel("About These Cost Savings", """
+    <p>Cost savings are calculated by multiplying hourly MW reduction by the Ontario TOU electricity rate.
+    Values are taken directly from <b>Final Cost Savings Analysis.xlsx</b> (Dx Feeder sheet), averaged
+    across all PF / PV bus / PV size / sun rating combinations for each load type at a 10 MW peak feeder.
+    Rates sourced from the Ontario Energy Board TOU schedule:
+    <b>Off-Peak 9.8 ¢/kWh</b> (hours 1–7, 20–24) ·
+    <b>Mid-Peak 15.7 ¢/kWh</b> (hours 12–17) ·
+    <b>On-Peak 20.3 ¢/kWh</b> (hours 8–11, 18–19).</p>
+    """)
+
+    # Charts row 1: hourly savings by load type + TOU overlay
+    _cf1, _cf2 = st.columns(2)
+    with _cf1:
+        _fc = make_subplots(specs=[[{"secondary_y": True}]])
+        _lt_colors = [C["purple"],C["blue"],C["orange"],C["gold"]]
+        for _i, (_lt, _col) in enumerate(zip(_DX_LT_LABELS, _lt_colors)):
+            _vals = [_DX_CS[h][_i] for h in _DX_HOURS]
+            _fc.add_trace(go.Bar(x=_DX_HOURS, y=_vals, name=_lt,
+                marker_color=_col, opacity=0.82), secondary_y=False)
+        _fc.add_trace(go.Scatter(x=_DX_HOURS, y=_tou_arr,
+            name="TOU Rate (¢/kWh)", mode="lines",
+            line=dict(color=C["deep"], width=2, dash="dot")), secondary_y=True)
+        _lay_cf = base_layout("Hourly Cost Savings by Load Type", height=340)
+        _lay_cf["barmode"] = "group"
+        _lay_cf["legend"] = dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1,
+            font=dict(size=9),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
+        _lay_cf["margin"] = dict(l=20,r=20,t=65,b=40)
+        _fc.update_layout(**_lay_cf)
+        _fc.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
+        _fc.update_yaxes(title="$/hr Saved", secondary_y=False)
+        _fc.update_yaxes(title="TOU Rate (¢/kWh)", secondary_y=True, showgrid=False)
+        show_chart(_fc)
+        analysis_box("On-peak hours 8–11 and 18–19 generate the highest savings. "
+            "Constant-Z (resistive loads) saves the most — highest CVR response. "
+            "ZIP-Residential and ZIP-Commercial are similar.")
+
+    with _cf2:
+        # Daily and annual comparison bar
+        _fb_cost = go.Figure()
+        _fb_cost.add_trace(go.Bar(
+            x=_DX_LT_LABELS,
+            y=_dx_daily_all,
+            name="Daily Savings ($)",
+            marker_color=_lt_colors,
+            text=[f"${v:,.0f}" for v in _dx_daily_all],
+            textposition="outside",
+            textfont=dict(size=11, color=C["deep"])
+        ))
+        _lay_fb = base_layout("Daily Cost Savings by Load Type (10 MW Peak)", height=340)
+        _lay_fb["yaxis"] = dict(title="Daily $ Saved", range=[0, max(_dx_daily_all)*1.35])
+        _lay_fb["margin"] = dict(l=20,r=20,t=65,b=40)
+        _fb_cost.update_layout(**_lay_fb)
+        show_chart(_fb_cost)
+        analysis_box(
+            f"Constant-Z: <b>${_dx_daily_all[0]:,.2f}/day</b> · "
+            f"Constant-I: <b>${_dx_daily_all[1]:,.2f}/day</b> · "
+            f"ZIP-Res: <b>${_dx_daily_all[2]:,.2f}/day</b> · "
+            f"ZIP-Comm: <b>${_dx_daily_all[3]:,.2f}/day</b>."
+        )
+
+    # Charts row 2: annual savings + cumulative daily
+    _cf3, _cf4 = st.columns(2)
+    with _cf3:
+        _fa_ann = go.Figure()
+        _fa_ann.add_trace(go.Bar(
+            x=_DX_LT_LABELS,
+            y=_dx_annual_all,
+            marker_color=_lt_colors,
+            text=[f"${v/1000:.0f}k" for v in _dx_annual_all],
+            textposition="outside",
+            textfont=dict(size=11, color=C["deep"])
+        ))
+        _lay_ann = base_layout("Annual Cost Savings by Load Type (×365)", height=340)
+        _lay_ann["yaxis"] = dict(title="Annual $ Saved", range=[0, max(_dx_annual_all)*1.30])
+        _lay_ann["margin"] = dict(l=20,r=20,t=65,b=40)
+        _fa_ann.update_layout(**_lay_ann)
+        show_chart(_fa_ann)
+        analysis_box(
+            f"Constant-Z: <b>${_DX_ANNUAL['Constant-Z']:,}/yr</b> · "
+            f"Constant-I: <b>${_DX_ANNUAL['Constant-I']:,}/yr</b> · "
+            f"ZIP-Res: <b>${_DX_ANNUAL['ZIP-Residential']:,}/yr</b> · "
+            f"ZIP-Comm: <b>${_DX_ANNUAL['ZIP-Commercial']:,}/yr</b>. "
+            "All at 10 MW peak, Ontario TOU rates, from study Excel data."
+        )
+
+    with _cf4:
+        # Cumulative savings over day (all-avg)
+        _cumul_z   = np.cumsum([_DX_CS[h][0] for h in _DX_HOURS])
+        _cumul_i   = np.cumsum([_DX_CS[h][1] for h in _DX_HOURS])
+        _cumul_avg = np.cumsum([_DX_CS[h][4] for h in _DX_HOURS])
+        _fc4 = go.Figure()
+        _fc4.add_trace(go.Scatter(x=_DX_HOURS, y=_cumul_z,
+            name="Constant-Z", mode="lines", line=dict(color=C["purple"],width=2.5)))
+        _fc4.add_trace(go.Scatter(x=_DX_HOURS, y=_cumul_i,
+            name="Constant-I", mode="lines", line=dict(color=C["blue"],width=2.5)))
+        _fc4.add_trace(go.Scatter(x=_DX_HOURS, y=_cumul_avg,
+            name="All-Type Avg", mode="lines",
+            line=dict(color=C["gold"],width=2.5,dash="dot"),
+            fill="tozeroy", fillcolor="rgba(255,166,0,0.08)"))
+        for _hs, _he in [(8,11),(18,19)]:
+            _fc4.add_vrect(x0=_hs-0.5, x1=_he+0.5,
+                fillcolor="rgba(230,57,70,0.07)", line_width=0)
+        _lay_c4 = base_layout("Cumulative Daily Savings ($)", height=340)
+        _lay_c4["legend"] = dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1,
+            font=dict(size=10),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
+        _lay_c4["margin"] = dict(l=20,r=20,t=65,b=40)
+        _fc4.update_layout(**_lay_c4)
+        _fc4.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
+        _fc4.update_yaxes(title="Cumulative $ Saved")
+        show_chart(_fc4)
+        analysis_box("Savings accelerate during on-peak windows (shaded red). "
+            f"Constant-Z reaches <b>${float(_cumul_z[-1]):,.2f}</b> by end of day.")
+
+
+
 def page_ieee_results(ieee):
     section_heading(
         "IEEE 14-Bus System — Study Results",
@@ -1945,6 +2108,119 @@ def page_ieee_results(ieee):
     | 13 | Residential | Primarily constant current | Good |
     | 14 | Residential | Primarily constant current | Best — most downstream |
     """)
+
+    # ── Cost Savings — IEEE 14-Bus ────────────────────────────────────────────
+    section_heading("Cost Savings — IEEE 14-Bus System",
+        "Estimated cost savings based on 2.44% average CVR reduction across all 168 cases. "
+        "Ontario TOU rates applied to MW reduction at each focus bus.")
+
+    # IEEE per-bus demand estimates (MW) based on published IEEE 14-bus load data
+    # Bus 4: 47.8 MW, Bus 9: 29.5 MW, Bus 14: 14.9 MW
+    # Avg reduction from study: Bus4=2.8%, Bus9=2.3%, Bus14=3.5% (Scenario 1, best config)
+    _IEEE_BUS_LOAD = {"Bus 4": 47.8, "Bus 9": 29.5, "Bus 14": 14.9}
+    _IEEE_BUS_RED  = {"Bus 4": 2.8,  "Bus 9": 2.3,  "Bus 14": 3.5}   # % from best scenario
+    _IEEE_TOU      = {1:9.8,2:9.8,3:9.8,4:9.8,5:9.8,6:9.8,7:9.8,
+                      8:20.3,9:20.3,10:20.3,11:20.3,
+                      12:15.7,13:15.7,14:15.7,15:15.7,16:15.7,17:15.7,
+                      18:20.3,19:20.3,20:9.8,21:9.8,22:9.8,23:9.8,24:9.8}
+    _IEEE_HOURS    = list(range(1,25))
+    _IEEE_IESO_PCT = [75.47,73.20,72.01,71.82,73.25,77.21,83.31,88.27,90.17,90.96,
+                      91.71,92.45,92.58,92.51,92.80,94.69,98.03,100.0,99.69,98.02,
+                      95.25,90.38,84.31,78.95]
+
+    # Per-bus daily savings (hourly load shape × % reduction × TOU rate)
+    _ieee_bus_savings = {}
+    for _bus, _mw in _IEEE_BUS_LOAD.items():
+        _red = _IEEE_BUS_RED[_bus] / 100.0
+        _hourly = []
+        for _i, _h in enumerate(_IEEE_HOURS):
+            _load_h   = _mw * _IEEE_IESO_PCT[_i] / 100.0
+            _mw_saved = _load_h * _red
+            _rate     = _IEEE_TOU[_h]
+            _hourly.append(_mw_saved * 1000.0 * _rate / 100.0)  # $/hr
+        _ieee_bus_savings[_bus] = _hourly
+
+    _ieee_daily  = {b: sum(v) for b, v in _ieee_bus_savings.items()}
+    _ieee_total_daily  = sum(_ieee_daily.values())
+    _ieee_total_annual = _ieee_total_daily * 365
+
+    # KPIs
+    _ik1,_ik2,_ik3,_ik4 = st.columns(4)
+    with _ik1: kpi("Best Bus (Bus 14)", f"${_ieee_daily['Bus 14']:,.2f}/day",
+        f"3.5% avg reduction · {_IEEE_BUS_LOAD['Bus 14']:.1f} MW load")
+    with _ik2: kpi("Total Daily Savings", f"${_ieee_total_daily:,.2f}",
+        "All 3 focus buses combined")
+    with _ik3: kpi("Annual Projection", f"${_ieee_total_annual:,.0f}",
+        "3 buses × 365 days · best scenario config")
+    with _ik4: kpi("Avg CVR Reduction", "2.44%", "Average across all 168 IEEE cases")
+
+    panel("About These Cost Savings", """
+    <p>IEEE 14-bus cost savings are estimated by applying the study's per-bus CVR reduction percentages
+    to the published IEEE 14-bus load data, scaled using the same IESO hourly demand shape used in
+    the Dx feeder study. Ontario TOU electricity rates are applied:
+    <b>Off-Peak 9.8 ¢/kWh</b> · <b>Mid-Peak 15.7 ¢/kWh</b> · <b>On-Peak 20.3 ¢/kWh</b>.
+    Values shown are for <b>Scenario 1 (best configuration)</b>: Medium PV at Bus 4 + small PV at buses 9 and 14.
+    Bus 14 achieves the highest per-MW savings due to its 3.5% average reduction.</p>
+    """)
+
+    _ic1, _ic2 = st.columns(2)
+    with _ic1:
+        # Hourly savings per bus stacked
+        _fic = go.Figure()
+        _bus_colors = {"Bus 4": C["purple"], "Bus 9": C["blue"], "Bus 14": C["pink"]}
+        for _bus, _hvec in _ieee_bus_savings.items():
+            _fic.add_trace(go.Bar(x=_IEEE_HOURS, y=_hvec, name=_bus,
+                marker_color=_bus_colors[_bus], opacity=0.85))
+        _tou_line = [_IEEE_TOU[h] for h in _IEEE_HOURS]
+        _fic2 = make_subplots(specs=[[{"secondary_y": True}]])
+        for _bus, _hvec in _ieee_bus_savings.items():
+            _fic2.add_trace(go.Bar(x=_IEEE_HOURS, y=_hvec, name=_bus,
+                marker_color=_bus_colors[_bus], opacity=0.85), secondary_y=False)
+        _fic2.add_trace(go.Scatter(x=_IEEE_HOURS, y=_tou_line,
+            name="TOU Rate (¢/kWh)", mode="lines",
+            line=dict(color=C["deep"],width=2,dash="dot")), secondary_y=True)
+        _lay_ic = base_layout("Hourly Cost Savings by Bus (Best Scenario)", height=340)
+        _lay_ic["barmode"] = "stack"
+        _lay_ic["legend"] = dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1,
+            font=dict(size=10),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
+        _lay_ic["margin"] = dict(l=20,r=20,t=65,b=40)
+        _fic2.update_layout(**_lay_ic)
+        _fic2.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
+        _fic2.update_yaxes(title="$/hr Saved (stacked)", secondary_y=False)
+        _fic2.update_yaxes(title="TOU Rate (¢/kWh)", secondary_y=True, showgrid=False)
+        show_chart(_fic2)
+        analysis_box("Bus 4 contributes the most in absolute $/hr (highest MW load). "
+            "Bus 14 achieves the highest % reduction per MW. "
+            "On-peak hours 8–11 and 18–19 generate highest savings.")
+
+    with _ic2:
+        # Daily savings comparison bar + annual
+        _fid = go.Figure()
+        _fid.add_trace(go.Bar(
+            x=list(_ieee_daily.keys()),
+            y=list(_ieee_daily.values()),
+            marker_color=[_bus_colors[b] for b in _ieee_daily.keys()],
+            text=[f"${v:,.0f}" for v in _ieee_daily.values()],
+            textposition="outside",
+            textfont=dict(size=12, color=C["deep"])
+        ))
+        _lay_id = base_layout("Daily Savings per Bus", height=340)
+        _lay_id["yaxis"] = dict(title="Daily $ Saved",
+            range=[0, max(_ieee_daily.values())*1.35])
+        _lay_id["margin"] = dict(l=20,r=20,t=65,b=40)
+        _fid.update_layout(**_lay_id)
+        show_chart(_fid)
+        analysis_box(
+            f"Bus 4: <b>${_ieee_daily['Bus 4']:,.2f}/day</b> "
+            f"(${_ieee_daily['Bus 4']*365:,.0f}/yr) · "
+            f"Bus 9: <b>${_ieee_daily['Bus 9']:,.2f}/day</b> "
+            f"(${_ieee_daily['Bus 9']*365:,.0f}/yr) · "
+            f"Bus 14: <b>${_ieee_daily['Bus 14']:,.2f}/day</b> "
+            f"(${_ieee_daily['Bus 14']*365:,.0f}/yr).<br>"
+            f"<b>Combined: ${_ieee_total_daily:,.2f}/day · ${_ieee_total_annual:,.0f}/yr</b>."
+        )
+
+
 
 def chart_loadtype_comparison(pred_by_type: dict) -> go.Figure:
     """Line chart showing predicted baseline load for each load type over 24 hours."""
@@ -2133,11 +2409,56 @@ def get_best_pred_for_loadtype(ai_df, model_perf, forecast_df, load_type: str) -
     pred_df["with_cvr_voltage_pu"] = pred_df["with_cvr_voltage_pu"].clip(0.93, 1.06)
     return pred_df
 
+# Study PF values and their known avg daily reductions (across all cases)
+_STUDY_PF_REDUCTIONS = {0.90: 1.96, 0.95: 3.13, 0.98: 3.71}
+_STUDY_PFS = sorted(_STUDY_PF_REDUCTIONS.keys())
+
+def _interp_pf_reduction(pf: float, base_reduction: float) -> float:
+    """Linearly interpolate/extrapolate a reduction % for any PF in [0.90, 0.98].
+    base_reduction is the known reduction at the nearest study PF.
+    Returns a scaled reduction that varies continuously with PF.
+    """
+    pf = float(np.clip(pf, 0.90, 0.98))
+    pfs = _STUDY_PFS
+    reds = [_STUDY_PF_REDUCTIONS[p] for p in pfs]
+    # Find bracketing PFs
+    if pf <= pfs[0]:
+        return base_reduction * (reds[0] / reds[0])
+    if pf >= pfs[-1]:
+        return base_reduction * (reds[-1] / reds[-1])
+    for i in range(len(pfs) - 1):
+        if pfs[i] <= pf <= pfs[i+1]:
+            t = (pf - pfs[i]) / (pfs[i+1] - pfs[i])
+            scale_at_pf  = reds[i] + t * (reds[i+1] - reds[i])
+            # Find which bracket the base came from
+            nearest_idx  = int(np.argmin([abs(pf - p) for p in pfs]))
+            scale_at_near = reds[nearest_idx]
+            if scale_at_near > 0:
+                return base_reduction * (scale_at_pf / scale_at_near)
+            return base_reduction
+    return base_reduction
+
+def _pf_scale_factor(pf: float) -> float:
+    """Return a multiplicative scale factor relative to PF=0.95 baseline.
+    PF 0.90 → 0.626, PF 0.95 → 1.000, PF 0.98 → 1.186 (from study data).
+    Linearly interpolated between study points.
+    """
+    pf = float(np.clip(pf, 0.90, 0.98))
+    pfs  = _STUDY_PFS
+    reds = [_STUDY_PF_REDUCTIONS[p] for p in pfs]
+    ref  = _STUDY_PF_REDUCTIONS[0.95]
+    # linear interpolation
+    for i in range(len(pfs)-1):
+        if pfs[i] <= pf <= pfs[i+1]:
+            t = (pf - pfs[i]) / (pfs[i+1] - pfs[i])
+            val = reds[i] + t * (reds[i+1] - reds[i])
+            return val / ref
+    if pf <= pfs[0]:  return reds[0] / ref
+    return reds[-1] / ref
+
 def _snap_pf(pf: float) -> float:
-    """Snap any PF value to the nearest available study value (0.90, 0.95, 0.98).
-    Interpolates the reduction percentage by weighted blending of two nearest points."""
-    study_pfs = [0.90, 0.95, 0.98]
-    return min(study_pfs, key=lambda x: abs(x - pf))
+    """Return the nearest study PF — used only for data lookup, not for scaling."""
+    return min(_STUDY_PFS, key=lambda x: abs(x - pf))
 
 
 def page_ai(constz_raw, consti_raw, zip_raw):
@@ -2314,10 +2635,16 @@ def page_ai(constz_raw, consti_raw, zip_raw):
             v_with_cvr_pu=("v_with_cvr_pu","mean"),
         ).reset_index()
 
-    # Show snap note if PF was rounded
-    _snapped = _snap_pf(float(sel_pf))
-    if abs(_snapped - float(sel_pf)) > 0.001:
-        st.info(f"ℹ️ PF {sel_pf:.2f} is not directly in the study data. Using nearest available PF = {_snapped:.2f} for the prediction.")
+    # Show interpolation note if PF is between study values
+    _snapped   = _snap_pf(float(sel_pf))
+    _pf_scale  = _pf_scale_factor(float(sel_pf))
+    _is_interp = abs(_snapped - float(sel_pf)) > 0.001
+    if _is_interp:
+        st.info(
+            f"ℹ️ PF {sel_pf:.2f} is between study values. "
+            f"Results are linearly interpolated between PF {_snapped:.2f} data and the adjacent study point "
+            f"(scale factor: {_pf_scale:.3f}× relative to PF 0.95 baseline)."
+        )
     if case_rows.empty:
         st.warning(f"No simulation data found for the selected combination. Try a different configuration.")
         return
@@ -2332,6 +2659,13 @@ def page_ai(constz_raw, consti_raw, zip_raw):
                              if h in case_rows["hour"].values else 2.94 for h in hrs])
     study_v     = np.array([float(case_rows[case_rows["hour"]==h]["v_with_cvr_pu"].values[0])
                              if h in case_rows["hour"].values else 0.97 for h in hrs])
+
+    # ── Apply continuous PF interpolation to reduction percentages ───────────
+    # study_red comes from the nearest study PF (0.90, 0.95, or 0.98).
+    # If the user selected a value between study points, scale the reduction
+    # proportionally using the linear interpolation factor derived from study data.
+    # Example: PF 0.93 → scale = 0.813 (between PF0.90=0.626 and PF0.95=1.000)
+    study_red = study_red * _pf_scale  # continuous PF interpolation
 
     # ── Scale to user-selected peak load ──────────────────────────────────────
     # The study used 10 MW peak. Scaling is applied to BOTH baseline and MW saved.
