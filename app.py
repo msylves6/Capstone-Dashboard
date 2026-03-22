@@ -2542,7 +2542,7 @@ def page_ai(constz_raw, consti_raw, zip_raw):
         forecast_df, train_df, model_perf, auto_pred_df, status = build_next_day_predictions()
         ai_df = train_df
     except Exception as e:
-        st.error(f"Failed to build Forecasting Model: {e}"); return
+        st.error(f"Failed to build AI section: {e}"); return
 
     section_heading(
         "AI Section — Next-Day CVR Forecasting",
@@ -2639,12 +2639,7 @@ def page_ai(constz_raw, consti_raw, zip_raw):
     _snapped   = _snap_pf(float(sel_pf))
     _pf_scale  = _pf_scale_factor(float(sel_pf))
     _is_interp = abs(_snapped - float(sel_pf)) > 0.001
-    if _is_interp:
-        st.info(
-            f"ℹ️ PF {sel_pf:.2f} is between study values. "
-            f"Results are linearly interpolated between PF {_snapped:.2f} data and the adjacent study point "
-            f"(scale factor: {_pf_scale:.3f}× relative to PF 0.95 baseline)."
-        )
+    # PF interpolation applied silently — no banner shown
     if case_rows.empty:
         st.warning(f"No simulation data found for the selected combination. Try a different configuration.")
         return
@@ -3926,7 +3921,7 @@ def sidebar_menu() -> str:
         "Dx Feeder Results",
         "IEEE 14-Bus Results",
         "Design Thought Process",
-        "Forecasting Model",
+        "AI Section",
         "Prototype",
         "Files",
     ], index=0)
@@ -3946,7 +3941,7 @@ elif selected_page == "Dx Feeder Results":
     page_dx_results(constz_raw, constz, cost_dx, cost_full)
 elif selected_page == "IEEE 14-Bus Results":
     page_ieee_results(ieee)
-elif selected_page == "Forecasting Model":
+elif selected_page == "AI Section":
     page_ai(constz_raw, consti_raw, zip_df)
 elif selected_page == "Prototype":
     page_prototype()
