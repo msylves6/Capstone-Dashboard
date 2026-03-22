@@ -3926,7 +3926,7 @@ def sidebar_menu() -> str:
         "Dx Feeder Results",
         "IEEE 14-Bus Results",
         "Design Thought Process",
-        "AI Section",
+        "Forecasting Model",
         "Prototype",
         "Files",
     ], index=0)
