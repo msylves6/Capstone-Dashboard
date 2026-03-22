@@ -32,7 +32,12 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-BASE_DIR = os.path.join(os.path.expanduser("~"), "Desktop", "Capstone Dashboard")
+# BASE_DIR: works locally (Desktop/Capstone Dashboard) AND on Streamlit Cloud (next to app.py)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# If running locally and files are in Desktop/Capstone Dashboard, use that instead
+_local = os.path.join(os.path.expanduser("~"), "Desktop", "Capstone Dashboard")
+if os.path.isdir(_local):
+    BASE_DIR = _local
 
 def p(filename: str) -> str:
     return os.path.join(BASE_DIR, filename)
@@ -263,23 +268,33 @@ def resolve_files() -> Dict[str, Optional[str]]:
     return {
         "constz":       first_existing(["ConstantZLoad (Consolidated data).xlsx",
                                         "ConstantZLoad(Consolidated data).xlsx",
-                                        "ConstantZLoad (Consolidated Data).xlsx"]),
+                                        "ConstantZLoad (Consolidated Data).xlsx",
+                                        "ConstantZLoad (Consolidated data).csv",
+                                        "ConstantZLoad.xlsx", "ConstantZLoad.csv"]),
         "consti":       first_existing(["ConstantILoad (Consolidated Data).xlsx",
                                         "ConstantILoad(Consolidated Data).xlsx",
-                                        "ConstantILoad (Consolidated data).xlsx"]),
-        "zip_main":     first_existing(["ZIPLoad.xlsx"]),
+                                        "ConstantILoad (Consolidated data).xlsx",
+                                        "ConstantILoad (Consolidated Data).csv",
+                                        "ConstantILoad.xlsx", "ConstantILoad.csv"]),
+        "zip_main":     first_existing(["ZIPLoad.xlsx", "ZIPLoad.csv"]),
         "zip_analysis": first_existing(["ZIPLoad(Analysis).xlsx", "ZIPLoad(Analysis).csv"]),
         "ieee":         first_existing(["IEEE14busresults.xlsx"]),
         "cost_dx":      first_existing(["Final Cost Savings Analysis.xlsx",
                                         "Final Cost Savings Analysis OLD(Dx Feeder Cost Savings).xlsx"]),
         "cost_full":    first_existing(["Final Cost Savings Analysis.xlsx",
                                         "Final Cost Savings Analysis OLD.xlsx"]),
-        "solar_farm":   first_existing(["Solar Farm Data(Tx Connected Solar Farms).xlsx"]),
+        "solar_farm":   first_existing(["Solar Farm Data(Tx Connected Solar Farms).xlsx",
+                                        "Solar Farm Data(Tx Connected Solar Farms).csv",
+                                        "Solar Farm Data (Tx Connected Solar Farms).xlsx",
+                                        "Solar Farm Data (Tx Connected Solar Farms).csv"]),
         "proto":        first_existing([
                             "Capstone Prototype Data(Sheet1).xlsx",
+                            "Capstone Prototype Data(Sheet1).csv",
                             "Capstone Prototype Data (Sheet1).xlsx",
+                            "Capstone Prototype Data (Sheet1).csv",
                             "Capstone Prototype Data(Sheet1).xls",
                             "Capstone Prototype Data.xlsx",
+                            "Capstone Prototype Data.csv",
                             "Capstone Prototype Data.xls",
                         ]),
         "video":        first_existing(["solar-energy-2026-01-21-12-26-38-utc.mp4"]),
@@ -296,7 +311,7 @@ FILES = resolve_files()
 
 @st.cache_data(show_spinner=False)
 def load_data():
-    required = ["constz", "zip_main", "zip_analysis", "ieee", "cost_dx", "cost_full"]
+    required = ["constz", "zip_main", "ieee", "cost_dx", "cost_full"]
     missing = [k for k in required if FILES.get(k) is None]
     if missing:
         raise FileNotFoundError(
@@ -305,7 +320,7 @@ def load_data():
         )
     constz       = read_table(FILES["constz"])
     zip_df       = read_table(FILES["zip_main"])
-    zip_analysis = read_table(FILES["zip_analysis"])
+    zip_analysis = read_table(FILES["zip_analysis"]) if FILES.get("zip_analysis") else pd.DataFrame()
     ieee         = read_table(FILES["ieee"])
     cost_dx      = read_table(FILES["cost_dx"])
     cost_full    = read_table(FILES["cost_full"])
