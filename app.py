@@ -2542,7 +2542,7 @@ def page_ai(constz_raw, consti_raw, zip_raw):
         forecast_df, train_df, model_perf, auto_pred_df, status = build_next_day_predictions()
         ai_df = train_df
     except Exception as e:
-        st.error(f"Failed to build AI section: {e}"); return
+        st.error(f"Failed to build Forecasting Model: {e}"); return
 
     section_heading(
         "AI Section — Next-Day CVR Forecasting",
@@ -3946,7 +3946,7 @@ elif selected_page == "Dx Feeder Results":
     page_dx_results(constz_raw, constz, cost_dx, cost_full)
 elif selected_page == "IEEE 14-Bus Results":
     page_ieee_results(ieee)
-elif selected_page == "AI Section":
+elif selected_page == "Forecasting Model":
     page_ai(constz_raw, consti_raw, zip_df)
 elif selected_page == "Prototype":
     page_prototype()
