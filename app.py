@@ -2545,7 +2545,7 @@ def page_ai(constz_raw, consti_raw, zip_raw):
         st.error(f"Failed to build AI section: {e}"); return
 
     section_heading(
-        "AI Section — Next-Day CVR Forecasting",
+        "Forecasting Model — Next-Day CVR Prediction",
         "Surrogate model trained on 5,184 PSSE simulation outputs across 216 unique cases. "
         "Select your operating scenario below to see predicted CVR performance and cost savings."
     )
@@ -3921,7 +3921,7 @@ def sidebar_menu() -> str:
         "Dx Feeder Results",
         "IEEE 14-Bus Results",
         "Design Thought Process",
-        "AI Section",
+        "Forecasting Model",
         "Prototype",
         "Files",
     ], index=0)
@@ -3941,7 +3941,7 @@ elif selected_page == "Dx Feeder Results":
     page_dx_results(constz_raw, constz, cost_dx, cost_full)
 elif selected_page == "IEEE 14-Bus Results":
     page_ieee_results(ieee)
-elif selected_page == "AI Section":
+elif selected_page == "Forecasting Model":
     page_ai(constz_raw, consti_raw, zip_df)
 elif selected_page == "Prototype":
     page_prototype()
