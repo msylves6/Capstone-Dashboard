@@ -1,0 +1,39 @@
+120 V Prototype (Load Bus PV),,,
+Component ,Value,Current,Wattage (I^2*R)
+Tx Line 1 R,1.40E-03,7.968,0.09
+Tx Line 1 L,9.44E-05,7.968,NA
+Tx Line 2 R,2.40E-03,7.968,0.15
+Tx Line 2 L,3.66E-08,7.968,NA
+Solar Farm L,5.00E-06,0.1175,NA
+Solar Farm R,1.00E+03,0.117,13.69
+Load R,15.00,7.836,921.04
+,,,
+120 V Prototype (Midline Bus PV),,,
+Component ,Value,Current,Wattage
+Tx Line 1 R,1.40E-03,7.968,0.09
+Tx Line 1 L,9.44E-05,7.968,NA
+Tx Line 2 R,2.40E-03,7.836,0.15
+Tx Line 2 L,3.66E-08,7.836,NA
+Solar Farm L,5.00E-06,0.1176,NA
+Solar Farm R,1.00E+03,0.1176,13.83
+Load R,15.00,7.836,921.04
+,,,
+30 V Prototype (Load Bus PV),,,
+Component ,Value,Current,Wattage
+Tx Line 1 R,1.00,4.236,17.94
+Tx Line 1 L,0.00,4.236,NA
+Tx Line 2 R,0.50,4.236,8.97
+Tx Line 2 L,0.00,4.236,NA
+Solar Farm L,0.02,2.937,NA
+Solar Farm R,1.80,2.937,15.53
+Load R,10.00,2.492,62.10
+,,,
+30 V Prototype (Midline Bus PV),,,
+Component ,Value,Current,Wattage
+Tx Line 1 R,1.00E+00,4.441,19.72
+Tx Line 1 L,9.00E-07,4.441,NA
+Tx Line 2 R,5.00E-01,2.536,3.22
+Tx Line 2 L,1.00E-04,2.536,NA
+Solar Farm L,2.20E-02,3.139,NA
+Solar Farm R,1.80E+00,3.139,17.74
+Load R,1.00E+01,2.536,64.31
