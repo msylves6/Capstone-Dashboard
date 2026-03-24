@@ -2841,9 +2841,9 @@ def page_ai(constz_raw, consti_raw, zip_raw):
         """)
 
     # ── COST SAVINGS ─────────────────────────────────────────────────────────
-    section_heading("Cost Savings Analysis",
-        "Ontario Time-of-Use (TOU) electricity pricing — sourced directly from "
-        "Final Cost Savings Analysis.xlsx (Dx Feeder sheet).")
+    section_heading("Cost Savings — Selected Scenario",
+        f"Estimated savings for: {sel_lt} · PF {sel_pf:.2f} · PV Bus {sel_bus} · {sel_size:.3f} MVA · "
+        f"{sel_sun.title()} · {sel_peak_mw:.0f} MW peak. Ontario TOU rates applied.")
 
     # Pick the right savings column from the Excel data for the selected load type
     _cs_idx  = _LT_IDX.get(sel_lt, 4)   # 0=Z,1=I,2=Res,3=Comm; 4→all avg
@@ -2874,9 +2874,9 @@ def page_ai(constz_raw, consti_raw, zip_raw):
     # KPI row
     ck1, ck2, ck3, ck4 = st.columns(4)
     with ck1: kpi("Daily Cost Saved", f"${_daily_save:,.2f}",
-        f"At {sel_peak_mw:.0f} MW peak · {sel_lt}")
+        f"PF {sel_pf:.2f} · Bus {sel_bus} · {sel_size:.3f} MVA · {sel_peak_mw:.0f} MW peak")
     with ck2: kpi("Annual Projection", f"${_annual_scaled:,.0f}",
-        f"×365 days · scaled to {sel_peak_mw:.0f} MW")
+        f"×365 days · {sel_peak_mw:.0f} MW peak · {sel_lt}")
     with ck3: kpi("Study Reference (10 MW)", f"${_study_daily:,.2f}/day",
         f"${_study_annual:,.0f}/yr · directly from Excel")
     with ck4: kpi("Peak Savings Hour", f"Hour {int(HOURS[int(np.argmax(_scaled_save))])}",
@@ -2887,9 +2887,11 @@ def page_ai(constz_raw, consti_raw, zip_raw):
         "<b>Off-Peak (9.8¢/kWh)</b> — hours 1–7 and 20–24 (overnight / late evening). "
         "<b>Mid-Peak (15.7¢/kWh)</b> — hours 12–17 (midday and afternoon). "
         "<b>On-Peak (20.3¢/kWh)</b> — hours 8–11 and 18–19 (morning rush / early evening).</p>"
-        "<p><b>Source:</b> <em>Final Cost Savings Analysis.xlsx → Dx Feeder Cost Savings</em>. "
-        "Values are averaged across all simulation cases for the selected load type at 10 MW peak, "
-        "then scaled proportionally to the user-selected peak load.</p>"
+        "<p><b>About these savings:</b> The load type shown reflects the distribution feeder's load composition — "
+        "this is a feeder characteristic, not a user-controllable parameter. "
+        "The controllable parameters are <b>PV bus location</b> and <b>PV inverter size</b>, which you can adjust above. "
+        "Savings are taken from the PSSE study for the selected PF, bus, and PV size combination, "
+        f"then scaled proportionally to your selected {sel_peak_mw:.0f} MW peak load.</p>"
         f"<p><em>{cons_note}</em></p>"
     ))
 
@@ -2962,15 +2964,16 @@ def page_ai(constz_raw, consti_raw, zip_raw):
                 line=dict(color=C["gold"], width=2, dash="dot"),
                 fillcolor="rgba(0,0,0,0)")
         y_max_lt_d = max(_lt_daily) * 1.30
-        lay_ltd = base_layout("Daily Cost Savings by Load Type (10 MW Study Peak)", height=340)
+        lay_ltd = base_layout("Daily Savings by Feeder Load Type (10 MW Reference)", height=340)
         lay_ltd["yaxis"] = {"title": "Daily $ Saved", "range": [0, y_max_lt_d]}
         fb.update_layout(**lay_ltd)
         fb.update_xaxes(title="Load Type")
         show_chart(fb)
         analysis_box(
-            "<b>Comparison across load types</b> at the study 10 MW peak, averaged across "
-            "all PF/bus/size combinations. Constant-Z saves the most because it has the "
-            "highest % reduction. Dashed gold box = your selected load type."
+            "<b>Load type is a feeder characteristic</b> — it reflects the mix of resistive, "
+            "motor, and electronic loads on the feeder, not a parameter you control. "
+            "Constant-Z (resistive loads like heaters) saves the most because power scales with V². "
+            "The dashed gold box shows your feeder's assumed load type."
         )
     with gc4:
         fa = go.Figure()
@@ -2979,18 +2982,18 @@ def page_ai(constz_raw, consti_raw, zip_raw):
             text=[f"${v/1000:.0f}k" for v in _lt_annual], textposition="outside",
             name="Annual savings ($)"))
         y_max_ann = max(_lt_annual) * 1.30
-        lay_ann = base_layout("Annual Cost Savings by Load Type (×365)", height=340)
+        lay_ann = base_layout("Annual Savings by Feeder Load Type (×365 days)", height=340)
         lay_ann["yaxis"] = {"title": "Annual $ Saved", "range": [0, y_max_ann]}
         fa.update_layout(**lay_ann)
         fa.update_xaxes(title="Load Type")
         show_chart(fa)
         analysis_box(
-            "<b>Annualised savings</b> = daily average × 365. "
-            f"Constant-Z: <b>${_ANNUAL['Constant-Z']:,}</b>/yr · "
-            f"Constant-I: <b>${_ANNUAL['Constant-I']:,}</b>/yr · "
-            f"ZIP-Res: <b>${_ANNUAL['ZIP-Residential']:,}</b>/yr · "
-            f"ZIP-Comm: <b>${_ANNUAL['ZIP-Commercial']:,}</b>/yr. "
-            "All values from Excel study at 10 MW peak."
+            f"Annualised savings (×365 days) at 10 MW reference peak. "
+            f"Constant-Z: <b>${_ANNUAL['Constant-Z']:,}/yr</b> · "
+            f"Constant-I: <b>${_ANNUAL['Constant-I']:,}/yr</b> · "
+            f"ZIP-Res: <b>${_ANNUAL['ZIP-Residential']:,}/yr</b> · "
+            f"ZIP-Comm: <b>${_ANNUAL['ZIP-Commercial']:,}/yr</b>. "
+            "These represent the range of outcomes depending on what loads exist on the feeder."
         )
 
     # ── WEATHER + AUTO-BEST ───────────────────────────────────────────────────
@@ -3075,7 +3078,9 @@ out-of-sample generalization.
 
     # ── AUTO BEST CASE ────────────────────────────────────────────────────────
     section_heading("AI-Recommended Best Case",
-        "Automatically selected top-ranked feasible scenario across all 216 cases under tomorrow's weather.")
+        "Top-ranked feasible operating configuration across all 216 cases under tomorrow's weather. "
+        "Controllable parameters: PV bus location and inverter size. "
+        "Load type reflects the feeder's load composition — not a controllable parameter.")
     auto_pf  = float(auto_pred_df["selected_pf"].iloc[0])
     auto_bus = int(auto_pred_df["selected_pv_bus"].iloc[0])
     auto_sz  = float(auto_pred_df["selected_pv_size_mva"].iloc[0])
@@ -3085,7 +3090,7 @@ out-of-sample generalization.
     auto_v   = model_perf.get("min_with_cvr_bus_voltage_pu", 0.0)
 
     ak1, ak2, ak3, ak4 = st.columns(4)
-    with ak1: kpi("Recommended Case", f"{auto_lt}", f"PF {auto_pf:.2f} · Bus {auto_bus} · {auto_sz:.3f} MVA")
+    with ak1: kpi("Best Config (Controllable)", f"PF {auto_pf:.2f} · Bus {auto_bus} · {auto_sz:.3f} MVA", f"Dominant load type: {auto_lt}")
     with ak2: kpi("Predicted Daily Reduction", f"{auto_red:.2f}%", "Avg across 24 hours")
     with ak3: kpi("Energy Saved", f"{auto_e:.2f} MWh", "Total daily MWh")
     with ak4: kpi("Min Bus Voltage", f"{auto_v:.4g} pu", "Must be ≥ 0.95 pu")
@@ -3762,14 +3767,14 @@ def page_design():
         </div>""", unsafe_allow_html=True)
 
         panel("Why 3 PV Farm Combinations?", """
-        <p>Rather than exhaustively testing all permutations, 3 key configurations were selected to most clearly
-        answer the design questions. Each condition was tested under both sunny and cloudy conditions.</p>
-        <p><b>1. One large farm at Bus 4</b> — Tests whether concentrating reactive power at one bus is sufficient.
-        Bus 4 benefits greatly (~4.5%) but Bus 14 drops below 2% — not sufficient for network-wide CVR.</p>
-        <p><b>2. Medium at Bus 4 + two small at Bus 9 and 14</b> — Tests distributed but unequal sizing.
-        All buses exceed 2%; Bus 14 achieves ~3.5%. Best overall configuration.</p>
-        <p><b>3. Three equal small farms</b> — Tests equal distribution.
-        Bus 14 leads (~3.2%) but Bus 4 drops to ~1.1% because it is electrically strong. Equal sizing is suboptimal when buses have different electrical strengths.</p>
+        <p>Rather than exhaustively testing all permutations, 3 key PV farm size configurations were selected
+        to most clearly answer the design questions. Each condition was tested under both sunny and cloudy conditions.</p>
+        <p><b>1. Medium at Bus 4 + two small at Bus 9 and 14</b> — distributed but unequal sizing.
+        All buses exceed 2%; Bus 14 achieves ~3.5%. <b>Best overall configuration.</b></p>
+        <p><b>2. One large farm at Bus 4</b> — tests whether concentrating reactive power at one bus is sufficient.
+        Bus 4 benefits greatly (~4.5%) but Bus 9 and 14 drop below 2% — not sufficient for network-wide CVR.</p>
+        <p><b>3. Three equal small farms</b> — tests equal distribution.
+        Bus 14 leads (~3.2%) but Bus 4 and Bus 9 drop below 2%.</p>
         """)
 
         panel("Why Three PV Inverter Sizes?", """
