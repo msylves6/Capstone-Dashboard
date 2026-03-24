@@ -455,7 +455,7 @@ def base_layout(title: str, height: int = 320) -> Dict[str, Any]:
         paper_bgcolor="rgba(255,255,255,0)", plot_bgcolor="rgba(255,255,255,0)",
         height=height, margin=dict(l=20, r=20, t=58, b=24),
         font=dict(size=12, color=C["text"]),
-        legend=dict(orientation="h", yanchor="bottom", y=1.18, xanchor="left", x=0),
+        legend=dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5, font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1),
     )
 
 def chart_load_profile(df: pd.DataFrame) -> go.Figure:
@@ -535,8 +535,8 @@ def chart_pv_bus_comparison(constz: pd.DataFrame) -> go.Figure:
     f.add_hline(y=2.0, line_dash="dot", line_color=C["warn"],
         annotation_text="2% target", annotation_font_size=10)
     lay = base_layout("Hourly % Reduction by PV Bus Location", height=320)
-    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.18, xanchor="center", x=0.5,
-        font=dict(size=10), bgcolor="rgba(255,255,255,0.85)", bordercolor=C["border"], borderwidth=1)
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+        font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
     f.update_layout(**lay)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1, 25, 2)))
     f.update_yaxes(title="% Reduction")
@@ -556,8 +556,8 @@ def chart_pv_size_comparison(constz: pd.DataFrame) -> go.Figure:
     f.add_hline(y=2.0, line_dash="dot", line_color=C["warn"],
         annotation_text="2% target", annotation_font_size=10)
     lay = base_layout("Hourly % Reduction by PV Inverter Size", height=320)
-    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.18, xanchor="center", x=0.5,
-        font=dict(size=10), bgcolor="rgba(255,255,255,0.85)", bordercolor=C["border"], borderwidth=1)
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+        font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
     f.update_layout(**lay)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1, 25, 2)))
     f.update_yaxes(title="% Reduction")
@@ -1289,7 +1289,7 @@ def _ieee_chart(title, bus4, bus4_label, bus9, bus9_label, bus14, bus14_label):
         showarrow=False, yanchor="bottom", yshift=4, font=dict(color=C["gold"], size=11))
     f.update_layout(template="plotly_white", paper_bgcolor="rgba(255,255,255,0)",
         plot_bgcolor="rgba(255,255,255,0)", height=360, showlegend=False,
-        margin=dict(l=20, r=120, t=90, b=40), font=dict(size=12, color=C["text"]),
+        margin=dict(l=20, r=120, t=55, b=100), font=dict(size=12, color=C["text"]),
         title=dict(text=f"<b>{title}</b>", x=0.5, xanchor="center",
                    font=dict(size=15, color=C["deep"])))
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1, 25, 2)))
@@ -1391,10 +1391,10 @@ def chart_model_comparison(score_df, title):
     f.add_trace(go.Bar(x=score_df["model"], y=score_df["test_rmse"], name="LOO-CV RMSE", marker_color=palette_b))
     lay = base_layout(title, height=340)
     lay["barmode"] = "group"
-    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.22,
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.28,
                          xanchor="center", x=0.5, font=dict(size=11),
                          bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
-    lay["margin"] = dict(l=20, r=20, t=50, b=90)
+    lay["margin"] = dict(l=20, r=20, t=52, b=105)
     f.update_layout(**lay)
     f.update_xaxes(title="Model"); f.update_yaxes(title="Error (MW)")
     return f
@@ -1407,10 +1407,10 @@ def chart_model_r2(score_df, title):
         marker_color=C["pink"], opacity=0.85))
     lay = base_layout(title, height=340)
     lay["barmode"] = "group"
-    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.22,
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.28,
                          xanchor="center", x=0.5, font=dict(size=11),
                          bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
-    lay["margin"] = dict(l=20, r=20, t=50, b=90)
+    lay["margin"] = dict(l=20, r=20, t=52, b=105)
     lay["yaxis"] = dict(title="R²", range=[0, 1.05])
     f.update_layout(**lay)
     f.update_xaxes(title="Model")
@@ -1453,8 +1453,8 @@ def chart_loadtype_comparison(pred_by_type):
             mode="lines", line=dict(color=color, width=2.8), showlegend=True))
     lay = _lt_layout("Next-Day Baseline Load by Load Type (No CVR)")
     lay["showlegend"] = True
-    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.18, xanchor="center", x=0.5,
-        font=dict(size=10), bgcolor="rgba(255,255,255,0.85)", bordercolor=C["border"], borderwidth=1)
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+        font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
     f.update_layout(**lay)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
     f.update_yaxes(title="MW")
@@ -1473,8 +1473,8 @@ def chart_loadtype_reduction(pred_by_type):
         annotation_font_size=10)
     lay = _lt_layout("Next-Day Predicted CVR % Reduction by Load Type")
     lay["showlegend"] = True
-    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.18, xanchor="center", x=0.5,
-        font=dict(size=10), bgcolor="rgba(255,255,255,0.85)", bordercolor=C["border"], borderwidth=1)
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+        font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
     f.update_layout(**lay)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
     f.update_yaxes(title="% Reduction")
@@ -1510,8 +1510,8 @@ def chart_loadtype_voltage(pred_by_type):
         annotation_font_size=10)
     lay = _lt_layout("Predicted With-CVR Bus Voltage by Load Type")
     lay["showlegend"] = True
-    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.18, xanchor="center", x=0.5,
-        font=dict(size=10), bgcolor="rgba(255,255,255,0.85)", bordercolor=C["border"], borderwidth=1)
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+        font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
     f.update_layout(**lay)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
     f.update_yaxes(title="Voltage (pu)")
@@ -1672,10 +1672,10 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
                 annotation_text="2% target", annotation_font_size=9,
                 annotation_position="bottom right")
         lay = base_layout(title, height=h)
-        lay["legend"] = dict(orientation="h", yanchor="top", y=-0.22,
+        lay["legend"] = dict(orientation="h", yanchor="top", y=-0.28,
             xanchor="center", x=0.5, font=dict(size=10),
-            bgcolor="rgba(255,255,255,0.85)", bordercolor=C["border"], borderwidth=1)
-        lay["margin"] = dict(l=20,r=20,t=55,b=85)
+            bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
+        lay["margin"] = dict(l=20,r=20,t=52,b=105)
         f.update_layout(**lay)
         f.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,3)))
         f.update_yaxes(title="% Reduction")
@@ -1694,9 +1694,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
             mode="lines+markers", line=dict(color=C["purple"],width=3,dash="dash"),
             marker=dict(size=5), fill="tonexty", fillcolor="rgba(184,108,224,0.10)"))
         lay_a = base_layout("Feeder Load · With and Without CVR", height=320)
-        lay_a["legend"] = dict(orientation="h",yanchor="top",y=-0.20,xanchor="center",x=0.5,
-            font=dict(size=10),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
-        lay_a["margin"] = dict(l=20,r=20,t=50,b=80)
+        lay_a["legend"] = dict(orientation="h",yanchor="top",y=-0.28,xanchor="center",x=0.5,
+            font=dict(size=10),bgcolor="rgba(255,255,255,0.9)",bordercolor=C["border"],borderwidth=1)
+        lay_a["margin"] = dict(l=20,r=20,t=52,b=105)
         fa.update_layout(**lay_a)
         fa.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
         fa.update_yaxes(title="MW")
@@ -1713,9 +1713,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
         fv.add_hline(y=0.97,line_dash="dot",line_color=C["gold"],annotation_text="Target 0.97 pu",annotation_font_size=9)
         fv.add_hline(y=0.95,line_dash="dot",line_color=C["gold"],annotation_text="Min 0.95 pu",annotation_font_size=9)
         lay_v = base_layout("Load-Bus Voltage Compliance", height=320)
-        lay_v["legend"] = dict(orientation="h",yanchor="top",y=-0.20,xanchor="center",x=0.5,
-            font=dict(size=10),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
-        lay_v["margin"] = dict(l=20,r=20,t=50,b=80)
+        lay_v["legend"] = dict(orientation="h",yanchor="top",y=-0.28,xanchor="center",x=0.5,
+            font=dict(size=10),bgcolor="rgba(255,255,255,0.9)",bordercolor=C["border"],borderwidth=1)
+        lay_v["margin"] = dict(l=20,r=20,t=52,b=105)
         lay_v["yaxis"] = dict(title="Voltage (pu)", range=[0.93,1.08])
         fv.update_layout(**lay_v)
         fv.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
@@ -1737,14 +1737,18 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
     with _db_r1:
         _b3a, _b4a, _b5a = round(sum(_PV_B3)/24,2), round(sum(_PV_B4)/24,2), round(sum(_PV_B5)/24,2)
         _fb_bus = go.Figure()
-        _fb_bus.add_trace(go.Bar(x=["Bus 3","Bus 4","Bus 5"], y=[_b3a,_b4a,_b5a],
-            marker_color=[C["purple"],C["blue"],C["orange"]],
-            text=[f"{v:.2f}%" for v in [_b3a,_b4a,_b5a]], textposition="outside",
-            textfont=dict(size=11, color=C["deep"])))
+        for _bx, _bv, _bc in zip(["Bus 3","Bus 4","Bus 5"], [_b3a,_b4a,_b5a], [C["purple"],C["blue"],C["orange"]]):
+            _fb_bus.add_trace(go.Bar(x=[_bx], y=[_bv], name=_bx,
+                marker_color=_bc,
+                text=[f"{_bv:.2f}%"], textposition="outside",
+                textfont=dict(size=11, color=C["deep"])))
         _fb_bus.add_hline(y=2.0,line_dash="dot",line_color=C["warn"],annotation_text="2% target",annotation_font_size=9)
-        _lay_bus = base_layout("Daily Avg by PV Bus",height=340)
-        _lay_bus["yaxis"] = dict(title="Avg % Reduction",range=[0,max([_b3a,_b4a,_b5a])*1.35])
-        _lay_bus["margin"] = dict(l=20,r=20,t=65,b=40)
+        _lay_bus = base_layout("Daily Avg by PV Bus",height=360)
+        _lay_bus["barmode"] = "group"
+        _lay_bus["yaxis"] = dict(title="Avg % Reduction",range=[0,max([_b3a,_b4a,_b5a])*1.4])
+        _lay_bus["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+            font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
+        _lay_bus["margin"] = dict(l=20,r=20,t=52,b=105)
         _fb_bus.update_layout(**_lay_bus)
         show_chart(_fb_bus)
 
@@ -1758,14 +1762,18 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
     with _db_r2:
         _s_a, _l_a = round(sum(_PV_S)/24,2), round(sum(_PV_L)/24,2)
         _fb_sz = go.Figure()
-        _fb_sz.add_trace(go.Bar(x=["5.263 MVA","10.526 MVA"], y=[_s_a,_l_a],
-            marker_color=[C["purple"],C["blue"]],
-            text=[f"{v:.2f}%" for v in [_s_a,_l_a]], textposition="outside",
-            textfont=dict(size=11, color=C["deep"])))
+        for _sxl, _sv, _sc in zip(["5.263 MVA","10.526 MVA"], [_s_a,_l_a], [C["purple"],C["blue"]]):
+            _fb_sz.add_trace(go.Bar(x=[_sxl], y=[_sv], name=_sxl,
+                marker_color=_sc,
+                text=[f"{_sv:.2f}%"], textposition="outside",
+                textfont=dict(size=11, color=C["deep"])))
         _fb_sz.add_hline(y=2.0,line_dash="dot",line_color=C["warn"],annotation_text="2% target",annotation_font_size=9)
-        _lay_sz = base_layout("Daily Avg by PV Size",height=340)
-        _lay_sz["yaxis"] = dict(title="Avg % Reduction",range=[0,max([_s_a,_l_a])*1.35])
-        _lay_sz["margin"] = dict(l=20,r=20,t=65,b=40)
+        _lay_sz = base_layout("Daily Avg by PV Size",height=360)
+        _lay_sz["barmode"] = "group"
+        _lay_sz["yaxis"] = dict(title="Avg % Reduction",range=[0,max([_s_a,_l_a])*1.4])
+        _lay_sz["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+            font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
+        _lay_sz["margin"] = dict(l=20,r=20,t=52,b=105)
         _fb_sz.update_layout(**_lay_sz)
         show_chart(_fb_sz)
 
@@ -1783,14 +1791,18 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
     with _dc_r1:
         _pf_avgs = [round(sum(_PF_90)/24,2),round(sum(_PF_95)/24,2),round(sum(_PF_98)/24,2)]
         _fpf = go.Figure()
-        _fpf.add_trace(go.Bar(x=["PF 0.90","PF 0.95","PF 0.98"], y=_pf_avgs,
-            marker_color=[C["purple"],C["blue"],C["orange"]],
-            text=[f"{v:.2f}%" for v in _pf_avgs], textposition="outside",
-            textfont=dict(size=11, color=C["deep"])))
+        for _pfx, _pfv, _pfc in zip(["PF 0.90","PF 0.95","PF 0.98"], _pf_avgs, [C["purple"],C["blue"],C["orange"]]):
+            _fpf.add_trace(go.Bar(x=[_pfx], y=[_pfv], name=_pfx,
+                marker_color=_pfc,
+                text=[f"{_pfv:.2f}%"], textposition="outside",
+                textfont=dict(size=11, color=C["deep"])))
         _fpf.add_hline(y=2.0,line_dash="dot",line_color=C["warn"],annotation_text="2% target",annotation_font_size=9)
-        _lay_pf = base_layout("Daily Avg by Power Factor",height=340)
-        _lay_pf["yaxis"] = dict(title="Avg % Reduction",range=[0,max(_pf_avgs)*1.35])
-        _lay_pf["margin"] = dict(l=20,r=20,t=65,b=40)
+        _lay_pf = base_layout("Daily Avg by Power Factor",height=360)
+        _lay_pf["barmode"] = "group"
+        _lay_pf["yaxis"] = dict(title="Avg % Reduction",range=[0,max(_pf_avgs)*1.4])
+        _lay_pf["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+            font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
+        _lay_pf["margin"] = dict(l=20,r=20,t=52,b=105)
         _fpf.update_layout(**_lay_pf)
         show_chart(_fpf)
 
@@ -1803,8 +1815,8 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
                 line=dict(color=_cl,width=2.5),showlegend=True))
         _f_sun_dx.add_hline(y=2.0,line_dash="dot",line_color=C["warn"],annotation_text="2% target",annotation_font_size=9,annotation_position="bottom right")
         _lay_sdx = base_layout("Hourly % Reduction by Sun Condition",height=320)
-        _lay_sdx["legend"]=dict(orientation="h",yanchor="top",y=-0.22,xanchor="center",x=0.5,font=dict(size=10),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
-        _lay_sdx["margin"]=dict(l=20,r=20,t=52,b=85)
+        _lay_sdx["legend"]=dict(orientation="h",yanchor="top",y=-0.28,xanchor="center",x=0.5,font=dict(size=10),bgcolor="rgba(255,255,255,0.9)",bordercolor=C["border"],borderwidth=1)
+        _lay_sdx["margin"]=dict(l=20,r=20,t=52,b=105)
         _f_sun_dx.update_layout(**_lay_sdx)
         _f_sun_dx.update_xaxes(title="Hour of Day",tickvals=list(range(1,25,3)))
         _f_sun_dx.update_yaxes(title="% Reduction")
@@ -1814,14 +1826,18 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
     with _dc_r2:
         _sun_avgs = [round(sum(_SUN_C)/24,2),round(sum(_SUN_M)/24,2),round(sum(_SUN_V)/24,2)]
         _fsun = go.Figure()
-        _fsun.add_trace(go.Bar(x=["Cloudy","Moderate Sun","Very Sunny"], y=_sun_avgs,
-            marker_color=[C["purple"],C["blue"],C["gold"]],
-            text=[f"{v:.2f}%" for v in _sun_avgs], textposition="outside",
-            textfont=dict(size=11, color=C["deep"])))
+        for _sx, _sv2, _sc2 in zip(["Cloudy","Moderate Sun","Very Sunny"], _sun_avgs, [C["purple"],C["blue"],C["gold"]]):
+            _fsun.add_trace(go.Bar(x=[_sx], y=[_sv2], name=_sx,
+                marker_color=_sc2,
+                text=[f"{_sv2:.2f}%"], textposition="outside",
+                textfont=dict(size=11, color=C["deep"])))
         _fsun.add_hline(y=2.0,line_dash="dot",line_color=C["warn"],annotation_text="2% target",annotation_font_size=9)
-        _lay_sun = base_layout("Daily Avg by Sun Condition",height=340)
-        _lay_sun["yaxis"] = dict(title="Avg % Reduction",range=[0,max(_sun_avgs)*1.35])
-        _lay_sun["margin"] = dict(l=20,r=20,t=65,b=40)
+        _lay_sun = base_layout("Daily Avg by Sun Condition",height=360)
+        _lay_sun["barmode"] = "group"
+        _lay_sun["yaxis"] = dict(title="Avg % Reduction",range=[0,max(_sun_avgs)*1.4])
+        _lay_sun["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+            font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
+        _lay_sun["margin"] = dict(l=20,r=20,t=52,b=105)
         _fsun.update_layout(**_lay_sun)
         show_chart(_fsun)
 
@@ -1840,15 +1856,19 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
     with dd2:
         lt_avgs = [round(sum(_LT_Z)/24,2),round(sum(_LT_I)/24,2),round(sum(_LT_RES)/24,2),round(sum(_LT_COMM)/24,2)]
         fl = go.Figure()
-        fl.add_trace(go.Bar(x=["Z","I","ZIP-Res","ZIP-Comm"], y=lt_avgs,
-            marker_color=[C["purple"],C["blue"],C["orange"],C["gold"]],
-            text=[f"{v:.2f}%" for v in lt_avgs], textposition="outside",
-            textfont=dict(size=11, color=C["deep"])))
+        for _ltx, _ltv, _ltc in zip(["Constant-Z","Constant-I","ZIP-Residential","ZIP-Commercial"], lt_avgs, [C["purple"],C["blue"],C["orange"],C["gold"]]):
+            fl.add_trace(go.Bar(x=[_ltx], y=[_ltv], name=_ltx,
+                marker_color=_ltc,
+                text=[f"{_ltv:.2f}%"], textposition="outside",
+                textfont=dict(size=11, color=C["deep"])))
         fl.add_hline(y=2.0, line_dash="dot", line_color=C["warn"],
             annotation_text="2% target", annotation_font_size=9)
-        lay_lt = base_layout("Daily Average by Load Type", height=320)
-        lay_lt["yaxis"] = dict(title="Avg % Reduction", range=[0, max(lt_avgs)*1.35])
-        lay_lt["margin"] = dict(l=20,r=20,t=65,b=40)
+        lay_lt = base_layout("Daily Average by Load Type", height=360)
+        lay_lt["barmode"] = "group"
+        lay_lt["yaxis"] = dict(title="Avg % Reduction", range=[0, max(lt_avgs)*1.4])
+        lay_lt["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+            font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
+        lay_lt["margin"] = dict(l=20,r=20,t=52,b=105)
         fl.update_layout(**lay_lt)
         show_chart(fl)
 
@@ -1876,9 +1896,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
             showarrow=False, bgcolor="rgba(255,255,255,0.8)",
             bordercolor=C["deep"], borderwidth=1, font=dict(size=11,color=C["text"]))
         lay_bw = base_layout("Most vs Least Effective Conditions for CVR in ZIP Mixture Load Types", height=360)
-        lay_bw["legend"] = dict(orientation="h",yanchor="top",y=-0.18,xanchor="center",x=0.5,
-            font=dict(size=9),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
-        lay_bw["margin"] = dict(l=20,r=20,t=55,b=80)
+        lay_bw["legend"] = dict(orientation="h",yanchor="top",y=-0.28,xanchor="center",x=0.5,
+            font=dict(size=9),bgcolor="rgba(255,255,255,0.9)",bordercolor=C["border"],borderwidth=1)
+        lay_bw["margin"] = dict(l=20,r=20,t=52,b=105)
         lay_bw["yaxis"] = dict(title="% Reduction", range=[0, 5.5])
         fb.update_layout(**lay_bw)
         fb.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,3)))
@@ -1968,9 +1988,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
             line=dict(color=C["deep"], width=2, dash="dot")), secondary_y=True)
         _lay_cf = base_layout("Hourly Cost Savings by Load Type", height=370)
         _lay_cf["barmode"] = "group"
-        _lay_cf["legend"] = dict(orientation="h",yanchor="top",y=-0.18,xanchor="center",x=0.5,
-            font=dict(size=9),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
-        _lay_cf["margin"] = dict(l=20,r=20,t=50,b=80)
+        _lay_cf["legend"] = dict(orientation="h",yanchor="top",y=-0.28,xanchor="center",x=0.5,
+            font=dict(size=9),bgcolor="rgba(255,255,255,0.9)",bordercolor=C["border"],borderwidth=1)
+        _lay_cf["margin"] = dict(l=20,r=20,t=52,b=105)
         _fc.update_layout(**_lay_cf)
         _fc.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
         _fc.update_yaxes(title="$/hr Saved", secondary_y=False)
@@ -1983,18 +2003,17 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
     with _cf2:
         # Daily and annual comparison bar
         _fb_cost = go.Figure()
-        _fb_cost.add_trace(go.Bar(
-            x=_DX_LT_LABELS,
-            y=_dx_daily_all,
-            name="Daily Savings ($)",
-            marker_color=_lt_colors,
-            text=[f"${v:,.0f}" for v in _dx_daily_all],
-            textposition="outside",
-            textfont=dict(size=11, color=C["deep"])
-        ))
-        _lay_fb = base_layout("Daily Cost Savings by Load Type (10 MW Peak)", height=340)
-        _lay_fb["yaxis"] = dict(title="Daily $ Saved", range=[0, max(_dx_daily_all)*1.35])
-        _lay_fb["margin"] = dict(l=20,r=20,t=65,b=40)
+        for _dlbl, _dval, _dcol in zip(_DX_LT_LABELS, _dx_daily_all, _lt_colors):
+            _fb_cost.add_trace(go.Bar(x=[_dlbl], y=[_dval], name=_dlbl,
+                marker_color=_dcol,
+                text=[f"${_dval:,.0f}"], textposition="outside",
+                textfont=dict(size=11, color=C["deep"])))
+        _lay_fb = base_layout("Daily Cost Savings by Load Type (10 MW Peak)", height=360)
+        _lay_fb["barmode"] = "group"
+        _lay_fb["yaxis"] = dict(title="Daily $ Saved", range=[0, max(_dx_daily_all)*1.4])
+        _lay_fb["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+            font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
+        _lay_fb["margin"] = dict(l=20,r=20,t=52,b=105)
         _fb_cost.update_layout(**_lay_fb)
         show_chart(_fb_cost)
         analysis_box(
@@ -2008,17 +2027,17 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
     _cf3, _cf4 = st.columns(2)
     with _cf3:
         _fa_ann = go.Figure()
-        _fa_ann.add_trace(go.Bar(
-            x=_DX_LT_LABELS,
-            y=_dx_annual_all,
-            marker_color=_lt_colors,
-            text=[f"${v/1000:.0f}k" for v in _dx_annual_all],
-            textposition="outside",
-            textfont=dict(size=11, color=C["deep"])
-        ))
-        _lay_ann = base_layout("Annual Cost Savings by Load Type (×365)", height=340)
-        _lay_ann["yaxis"] = dict(title="Annual $ Saved", range=[0, max(_dx_annual_all)*1.30])
-        _lay_ann["margin"] = dict(l=20,r=20,t=65,b=40)
+        for _albl, _aval, _acol in zip(_DX_LT_LABELS, _dx_annual_all, _lt_colors):
+            _fa_ann.add_trace(go.Bar(x=[_albl], y=[_aval], name=_albl,
+                marker_color=_acol,
+                text=[f"${_aval/1000:.0f}k"], textposition="outside",
+                textfont=dict(size=11, color=C["deep"])))
+        _lay_ann = base_layout("Annual Cost Savings by Load Type (×365)", height=360)
+        _lay_ann["barmode"] = "group"
+        _lay_ann["yaxis"] = dict(title="Annual $ Saved", range=[0, max(_dx_annual_all)*1.4])
+        _lay_ann["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+            font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
+        _lay_ann["margin"] = dict(l=20,r=20,t=52,b=105)
         _fa_ann.update_layout(**_lay_ann)
         show_chart(_fa_ann)
         analysis_box(
@@ -2052,9 +2071,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
             _fc4.add_vrect(x0=_hs-0.5, x1=_he+0.5,
                 fillcolor="rgba(230,57,70,0.07)", line_width=0)
         _lay_c4 = base_layout("Cumulative Daily Savings ($)", height=340)
-        _lay_c4["legend"] = dict(orientation="h",yanchor="top",y=-0.18,xanchor="center",x=0.5,
-            font=dict(size=10),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
-        _lay_c4["margin"] = dict(l=20,r=20,t=50,b=80)
+        _lay_c4["legend"] = dict(orientation="h",yanchor="top",y=-0.28,xanchor="center",x=0.5,
+            font=dict(size=10),bgcolor="rgba(255,255,255,0.9)",bordercolor=C["border"],borderwidth=1)
+        _lay_c4["margin"] = dict(l=20,r=20,t=52,b=105)
         _fc4.update_layout(**_lay_c4)
         _fc4.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
         _fc4.update_yaxes(title="Cumulative $ Saved")
@@ -2121,14 +2140,18 @@ def page_ieee_results(ieee):
     with _s1b:
         _s1_avgs = {"Bus 4": 2.8, "Bus 9": 2.3, "Bus 14": 3.5}
         _fs1 = go.Figure()
-        _fs1.add_trace(go.Bar(x=list(_s1_avgs.keys()), y=list(_s1_avgs.values()),
-            marker_color=[C["purple"],C["blue"],C["pink"]],
-            text=[f"{v:.1f}%" for v in _s1_avgs.values()], textposition="outside",
-            textfont=dict(size=12, color=C["deep"])))
+        for _s1k, _s1v, _s1c in zip(_s1_avgs.keys(), _s1_avgs.values(), [C["purple"],C["blue"],C["pink"]]):
+            _fs1.add_trace(go.Bar(x=[_s1k], y=[_s1v], name=_s1k,
+                marker_color=_s1c,
+                text=[f"{_s1v:.1f}%"], textposition="outside",
+                textfont=dict(size=12, color=C["deep"])))
         _fs1.add_hline(y=2.0,line_dash="dot",line_color=C["warn"],annotation_text="2% target",annotation_font_size=9)
-        _lay1 = base_layout("Avg % Reduction — Scenario 1",height=300)
-        _lay1["yaxis"] = dict(title="Avg % Reduction",range=[0,5.0])
-        _lay1["margin"] = dict(l=20,r=20,t=65,b=40)
+        _lay1 = base_layout("Avg % Reduction — Scenario 1",height=360)
+        _lay1["barmode"] = "group"
+        _lay1["yaxis"] = dict(title="Avg % Reduction",range=[0,5.5])
+        _lay1["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+            font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
+        _lay1["margin"] = dict(l=20,r=20,t=52,b=105)
         _fs1.update_layout(**_lay1)
         show_chart(_fs1)
     analysis_box("""
@@ -2145,14 +2168,18 @@ def page_ieee_results(ieee):
     with _s2b:
         _s2_avgs = {"Bus 4": 4.5, "Bus 9": 1.4, "Bus 14": 1.0}
         _fs2 = go.Figure()
-        _fs2.add_trace(go.Bar(x=list(_s2_avgs.keys()), y=list(_s2_avgs.values()),
-            marker_color=[C["purple"],C["blue"],C["pink"]],
-            text=[f"{v:.1f}%" for v in _s2_avgs.values()], textposition="outside",
-            textfont=dict(size=12, color=C["deep"])))
+        for _s2k, _s2v, _s2c in zip(_s2_avgs.keys(), _s2_avgs.values(), [C["purple"],C["blue"],C["pink"]]):
+            _fs2.add_trace(go.Bar(x=[_s2k], y=[_s2v], name=_s2k,
+                marker_color=_s2c,
+                text=[f"{_s2v:.1f}%"], textposition="outside",
+                textfont=dict(size=12, color=C["deep"])))
         _fs2.add_hline(y=2.0,line_dash="dot",line_color=C["warn"],annotation_text="2% target",annotation_font_size=9)
-        _lay2 = base_layout("Avg % Reduction — Scenario 2",height=300)
-        _lay2["yaxis"] = dict(title="Avg % Reduction",range=[0,6.0])
-        _lay2["margin"] = dict(l=20,r=20,t=65,b=40)
+        _lay2 = base_layout("Avg % Reduction — Scenario 2",height=360)
+        _lay2["barmode"] = "group"
+        _lay2["yaxis"] = dict(title="Avg % Reduction",range=[0,6.5])
+        _lay2["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+            font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
+        _lay2["margin"] = dict(l=20,r=20,t=52,b=105)
         _fs2.update_layout(**_lay2)
         show_chart(_fs2)
     analysis_box("""
@@ -2168,14 +2195,18 @@ def page_ieee_results(ieee):
     with _s3b:
         _s3_avgs = {"Bus 4": 1.1, "Bus 9": 1.8, "Bus 14": 3.2}
         _fs3 = go.Figure()
-        _fs3.add_trace(go.Bar(x=list(_s3_avgs.keys()), y=list(_s3_avgs.values()),
-            marker_color=[C["purple"],C["blue"],C["pink"]],
-            text=[f"{v:.1f}%" for v in _s3_avgs.values()], textposition="outside",
-            textfont=dict(size=12, color=C["deep"])))
+        for _s3k, _s3v, _s3c in zip(_s3_avgs.keys(), _s3_avgs.values(), [C["purple"],C["blue"],C["pink"]]):
+            _fs3.add_trace(go.Bar(x=[_s3k], y=[_s3v], name=_s3k,
+                marker_color=_s3c,
+                text=[f"{_s3v:.1f}%"], textposition="outside",
+                textfont=dict(size=12, color=C["deep"])))
         _fs3.add_hline(y=2.0,line_dash="dot",line_color=C["warn"],annotation_text="2% target",annotation_font_size=9)
-        _lay3 = base_layout("Avg % Reduction — Scenario 3",height=300)
-        _lay3["yaxis"] = dict(title="Avg % Reduction",range=[0,5.0])
-        _lay3["margin"] = dict(l=20,r=20,t=65,b=40)
+        _lay3 = base_layout("Avg % Reduction — Scenario 3",height=360)
+        _lay3["barmode"] = "group"
+        _lay3["yaxis"] = dict(title="Avg % Reduction",range=[0,5.5])
+        _lay3["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+            font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
+        _lay3["margin"] = dict(l=20,r=20,t=52,b=105)
         _fs3.update_layout(**_lay3)
         show_chart(_fs3)
     analysis_box("""
@@ -2283,9 +2314,9 @@ def page_ieee_results(ieee):
             line=dict(color=C["deep"],width=2,dash="dot")), secondary_y=True)
         _lay_ic = base_layout("Hourly Cost Savings by Bus (Best Scenario)", height=340)
         _lay_ic["barmode"] = "stack"
-        _lay_ic["legend"] = dict(orientation="h",yanchor="top",y=-0.18,xanchor="center",x=0.5,
-            font=dict(size=10),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
-        _lay_ic["margin"] = dict(l=20,r=20,t=50,b=80)
+        _lay_ic["legend"] = dict(orientation="h",yanchor="top",y=-0.28,xanchor="center",x=0.5,
+            font=dict(size=10),bgcolor="rgba(255,255,255,0.9)",bordercolor=C["border"],borderwidth=1)
+        _lay_ic["margin"] = dict(l=20,r=20,t=52,b=105)
         _fic2.update_layout(**_lay_ic)
         _fic2.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
         _fic2.update_yaxes(title="$/hr Saved (stacked)", secondary_y=False)
@@ -2301,18 +2332,18 @@ def page_ieee_results(ieee):
     with _ic2:
         # Daily savings comparison bar + annual
         _fid = go.Figure()
-        _fid.add_trace(go.Bar(
-            x=list(_ieee_daily.keys()),
-            y=list(_ieee_daily.values()),
-            marker_color=[_bus_colors[b] for b in _ieee_daily.keys()],
-            text=[f"${v:,.0f}" for v in _ieee_daily.values()],
-            textposition="outside",
-            textfont=dict(size=12, color=C["deep"])
-        ))
-        _lay_id = base_layout("Daily Savings per Bus", height=340)
+        for _ibus, _ival in _ieee_daily.items():
+            _fid.add_trace(go.Bar(x=[_ibus], y=[_ival], name=_ibus,
+                marker_color=_bus_colors[_ibus],
+                text=[f"${_ival:,.0f}"], textposition="outside",
+                textfont=dict(size=12, color=C["deep"])))
+        _lay_id = base_layout("Daily Savings per Bus", height=360)
+        _lay_id["barmode"] = "group"
         _lay_id["yaxis"] = dict(title="Daily $ Saved",
-            range=[0, max(_ieee_daily.values())*1.35])
-        _lay_id["margin"] = dict(l=20,r=20,t=65,b=40)
+            range=[0, max(_ieee_daily.values())*1.4])
+        _lay_id["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+            font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
+        _lay_id["margin"] = dict(l=20,r=20,t=52,b=105)
         _fid.update_layout(**_lay_id)
         show_chart(_fid)
         analysis_box(
@@ -2339,7 +2370,7 @@ def chart_loadtype_comparison(pred_by_type: dict) -> go.Figure:
     layout = base_layout("Next-Day Baseline Load by Load Type (No CVR)", height=320)
     layout["title"] = dict(text=f"<b>Next-Day Baseline Load by Load Type (No CVR)</b>",
         x=0.5, xanchor="center", font=dict(size=13, color=C["deep"]))
-    layout["margin"] = dict(l=20, r=100, t=70, b=30)
+    layout["margin"] = dict(l=20, r=100, t=52, b=100)
     f.update_layout(**layout)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1, 25, 2)))
     f.update_yaxes(title="MW")
@@ -2361,7 +2392,7 @@ def chart_loadtype_reduction(pred_by_type: dict) -> go.Figure:
     layout = base_layout("Next-Day Predicted CVR % Reduction by Load Type", height=320)
     layout["title"] = dict(text=f"<b>Next-Day Predicted CVR % Reduction by Load Type</b>",
         x=0.5, xanchor="center", font=dict(size=13, color=C["deep"]))
-    layout["margin"] = dict(l=20, r=100, t=70, b=30)
+    layout["margin"] = dict(l=20, r=100, t=52, b=100)
     f.update_layout(**layout)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1, 25, 2)))
     f.update_yaxes(title="% Reduction")
@@ -2401,7 +2432,7 @@ def chart_loadtype_voltage(pred_by_type: dict) -> go.Figure:
     layout = base_layout("Predicted With-CVR Bus Voltage by Load Type", height=320)
     layout["title"] = dict(text=f"<b>Predicted With-CVR Bus Voltage by Load Type</b>",
         x=0.5, xanchor="center", font=dict(size=13, color=C["deep"]))
-    layout["margin"] = dict(l=20, r=100, t=70, b=30)
+    layout["margin"] = dict(l=20, r=100, t=52, b=100)
     f.update_layout(**layout)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1, 25, 2)))
     f.update_yaxes(title="Voltage (pu)")
@@ -3234,7 +3265,7 @@ out-of-sample generalization.
                 textposition="outside", textfont=dict(size=9)
             ))
             _fi_lay = base_layout("Feature Importances — Random Forest (Load Shape Model)", height=320)
-            _fi_lay["margin"] = dict(l=20, r=20, t=55, b=80)
+            _fi_lay["margin"] = dict(l=20, r=20, t=52, b=105)
             _fi_lay["yaxis"] = {"title": "Importance", "range": [0, float(_feat_df["Importance"].max())*1.3]}
             _fi_fig.update_layout(**_fi_lay)
             _fi_fig.update_xaxes(title="Feature")
@@ -3696,12 +3727,12 @@ def page_design():
                 annotation_text="2% target", annotation_position="bottom right",
                 annotation_font_size=10)
         lay = base_layout(title, height=height)
-        lay["margin"] = dict(l=20, r=20, t=60, b=40)
+        lay["margin"] = dict(l=20, r=20, t=52, b=105)
         lay["showlegend"] = True
         lay["legend"] = dict(
-            orientation="h", yanchor="top", y=-0.22,
+            orientation="h", yanchor="top", y=-0.28,
             xanchor="center", x=0.5, font=dict(size=10),
-            bgcolor="rgba(255,255,255,0.85)", bordercolor=C["border"], borderwidth=1)
+            bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
         f.update_layout(**lay)
         f.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,3)))
         f.update_yaxes(title=y_title)
@@ -3992,20 +4023,28 @@ def page_design():
         g_a, g_b = st.columns(2)
         with g_a:
             fi = go.Figure()
-            fi.add_trace(go.Scatter(x=HOURS, y=IESO_PCT, mode="lines+markers",
+            fi.add_trace(go.Scatter(x=HOURS, y=IESO_PCT, name="% of Peak Demand", mode="lines+markers",
                 line=dict(color=C["purple"], width=3), marker=dict(size=5),
                 fill="tozeroy", fillcolor="rgba(184,108,224,0.08)"))
             fi.add_hline(y=100, line_dash="dot", line_color=C["warn"], annotation_text="100% peak (hr 18)")
-            fi.update_layout(**base_layout("Average Hourly Demand in 2024 (% of Peak)", height=320))
+            _fi_lay = base_layout("Average Hourly Demand in 2024 (% of Peak)", height=340)
+            _fi_lay["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+                font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
+            _fi_lay["margin"] = dict(l=20, r=20, t=52, b=105)
+            fi.update_layout(**_fi_lay)
             fi.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
             fi.update_yaxes(title="% of Peak Demand")
             show_chart(fi)
         with g_b:
             fi2 = go.Figure()
-            fi2.add_trace(go.Bar(x=HOURS, y=IESO_AVG_MW,
+            fi2.add_trace(go.Bar(x=HOURS, y=IESO_AVG_MW, name="Avg Ontario Demand (MW)",
                 marker_color=[C["purple"] if v == max(IESO_AVG_MW) else C["blue"] for v in IESO_AVG_MW],
                 opacity=0.85))
-            fi2.update_layout(**base_layout("Average Ontario Demand by Hour in 2024 (MW)", height=320))
+            _fi2_lay = base_layout("Average Ontario Demand by Hour in 2024 (MW)", height=340)
+            _fi2_lay["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+                font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
+            _fi2_lay["margin"] = dict(l=20, r=20, t=52, b=105)
+            fi2.update_layout(**_fi2_lay)
             fi2.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
             fi2.update_yaxes(title="Average MW")
             show_chart(fi2)
@@ -4073,7 +4112,7 @@ def page_design():
                 text=f"P and Q Curves of Solar Farm on<br><b style=\'color:{title_color};\'>{title}</b> in p.u.",
                 x=0.5, xanchor="center", font=dict(size=13, color=C["deep"]))
             lay["margin"] = dict(l=10, r=10, t=70, b=40)
-            lay["legend"] = dict(orientation="h", y=-0.18, x=0.5, xanchor="center", font=dict(size=10))
+            lay["legend"] = dict(orientation="h", yanchor="top", y=-0.30, x=0.5, xanchor="center", font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
             f.update_layout(**lay)
             f.update_xaxes(title="Hour", tickvals=[1,6,11,16,21], range=[1,24])
             f.update_yaxes(title="p.u.", range=[0, 1.25])
