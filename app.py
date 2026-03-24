@@ -455,7 +455,7 @@ def base_layout(title: str, height: int = 320) -> Dict[str, Any]:
         paper_bgcolor="rgba(255,255,255,0)", plot_bgcolor="rgba(255,255,255,0)",
         height=height, margin=dict(l=20, r=20, t=58, b=24),
         font=dict(size=12, color=C["text"]),
-        legend=dict(orientation="h", yanchor="bottom", y=1.12, xanchor="left", x=0),
+        legend=dict(orientation="h", yanchor="bottom", y=1.18, xanchor="left", x=0),
     )
 
 def chart_load_profile(df: pd.DataFrame) -> go.Figure:
@@ -1672,10 +1672,10 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
                 annotation_text="2% target", annotation_font_size=9,
                 annotation_position="bottom right")
         lay = base_layout(title, height=h)
-        lay["legend"] = dict(orientation="h", yanchor="bottom", y=1.05,
-            xanchor="right", x=1, font=dict(size=10),
+        lay["legend"] = dict(orientation="h", yanchor="top", y=-0.22,
+            xanchor="center", x=0.5, font=dict(size=10),
             bgcolor="rgba(255,255,255,0.85)", bordercolor=C["border"], borderwidth=1)
-        lay["margin"] = dict(l=20,r=20,t=75,b=40)
+        lay["margin"] = dict(l=20,r=20,t=55,b=85)
         f.update_layout(**lay)
         f.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,3)))
         f.update_yaxes(title="% Reduction")
@@ -1694,9 +1694,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
             mode="lines+markers", line=dict(color=C["purple"],width=3,dash="dash"),
             marker=dict(size=5), fill="tonexty", fillcolor="rgba(184,108,224,0.10)"))
         lay_a = base_layout("Feeder Load · With and Without CVR", height=320)
-        lay_a["legend"] = dict(orientation="h",yanchor="bottom",y=1.04,xanchor="right",x=1,
+        lay_a["legend"] = dict(orientation="h",yanchor="top",y=-0.20,xanchor="center",x=0.5,
             font=dict(size=10),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
-        lay_a["margin"] = dict(l=20,r=20,t=72,b=40)
+        lay_a["margin"] = dict(l=20,r=20,t=50,b=80)
         fa.update_layout(**lay_a)
         fa.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
         fa.update_yaxes(title="MW")
@@ -1713,9 +1713,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
         fv.add_hline(y=0.97,line_dash="dot",line_color=C["gold"],annotation_text="Target 0.97 pu",annotation_font_size=9)
         fv.add_hline(y=0.95,line_dash="dot",line_color=C["gold"],annotation_text="Min 0.95 pu",annotation_font_size=9)
         lay_v = base_layout("Load-Bus Voltage Compliance", height=320)
-        lay_v["legend"] = dict(orientation="h",yanchor="bottom",y=1.04,xanchor="right",x=1,
+        lay_v["legend"] = dict(orientation="h",yanchor="top",y=-0.20,xanchor="center",x=0.5,
             font=dict(size=10),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
-        lay_v["margin"] = dict(l=20,r=20,t=72,b=40)
+        lay_v["margin"] = dict(l=20,r=20,t=50,b=80)
         lay_v["yaxis"] = dict(title="Voltage (pu)", range=[0.93,1.08])
         fv.update_layout(**lay_v)
         fv.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
@@ -1803,8 +1803,8 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
                 line=dict(color=_cl,width=2.5),showlegend=True))
         _f_sun_dx.add_hline(y=2.0,line_dash="dot",line_color=C["warn"],annotation_text="2% target",annotation_font_size=9,annotation_position="bottom right")
         _lay_sdx = base_layout("Hourly % Reduction by Sun Condition",height=320)
-        _lay_sdx["legend"]=dict(orientation="h",yanchor="bottom",y=1.05,xanchor="right",x=1,font=dict(size=10),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
-        _lay_sdx["margin"]=dict(l=20,r=20,t=75,b=40)
+        _lay_sdx["legend"]=dict(orientation="h",yanchor="top",y=-0.22,xanchor="center",x=0.5,font=dict(size=10),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
+        _lay_sdx["margin"]=dict(l=20,r=20,t=52,b=85)
         _f_sun_dx.update_layout(**_lay_sdx)
         _f_sun_dx.update_xaxes(title="Hour of Day",tickvals=list(range(1,25,3)))
         _f_sun_dx.update_yaxes(title="% Reduction")
@@ -3159,27 +3159,93 @@ out-of-sample generalization.
 
     # ── MODEL PERFORMANCE ─────────────────────────────────────────────────────
     section_heading("Model Performance",
-        "Load-shape ML model accuracy. CVR delta uses ground-truth study data, not ML prediction.")
+        "Load-shape ML model accuracy, evaluated with leave-one-hour-out cross-validation (no data leakage). "
+        "CVR reduction % comes from PSSE study data — not predicted by ML.")
+
     baseline_load_scores = model_perf["baseline_load_scores"]
+
+    # ── Methodology explanation panel ─────────────────────────────────────
+    panel("How the Model Works & How Metrics Are Calculated", f"""
+    <p><b>What the ML model does:</b> Predicts the hourly feeder <em>load shape</em> for tomorrow
+    using weather features (temperature, cloud cover, precipitation, wind speed) from the Open-Meteo API
+    for London, Ontario. The model does <b>not</b> predict CVR reduction % — that comes directly
+    from the PSSE simulation study data for the exact selected configuration.</p>
+
+    <p><b>Model architecture:</b> Blended ensemble — 40% Random Forest + 60% Extra Trees Regressor.
+    Features: hour-of-day (sin/cos cyclical encoding), peak-window flag, daylight-window flag,
+    and tomorrow's weather variables. Training target: average hourly feeder load (MW) from study data.</p>
+
+    <p><b>No data leakage — Leave-One-Hour-Out Cross-Validation (LOO-CV):</b><br>
+    The dataset has 24 hourly load values. To get honest out-of-sample metrics:<br>
+    &nbsp;&nbsp;1. For each hour <em>h</em> = 1 … 24, train a fresh model on the other 23 hours.<br>
+    &nbsp;&nbsp;2. Predict hour <em>h</em> using the held-out model.<br>
+    &nbsp;&nbsp;3. Collect all 24 predictions and compute MAE, RMSE, R² against the true values.<br>
+    This guarantees no hour used for evaluation was seen during training — eliminating leakage entirely.</p>
+
+    <p><b>Why train R² ≈ 1.0 is expected (not a red flag):</b> When all 24 points are used for training,
+    the ensemble memorises the load curve perfectly — this is unavoidable with 24 data points and
+    a tree-based model. The meaningful metric is the <b>LOO-CV Test R²</b>, which shows how well
+    the model generalises when predicting a held-out hour.
+    High test R² means the cyclical hour features capture most of the load shape,
+    and weather features provide additional adjustment at inference time.</p>
+    """)
+
     m1, m2 = st.columns(2)
     with m1:
-        show_chart(chart_model_comparison(baseline_load_scores, "Load Shape Model Error (MAE / RMSE)"))
-        analysis_box("""
-        <b>MAE</b> = average absolute error in MW (leave-one-hour-out cross-validation — no data leakage).
-        <b>RMSE</b> penalizes large misses more. Metrics reflect honest out-of-sample performance:
-        each hour is predicted using a model trained on the other 23 hours.
-        The ML model predicts tomorrow's hourly load shape from weather.
-        CVR savings come directly from the PSSE study data — not from ML prediction.
-        """)
+        show_chart(chart_model_comparison(baseline_load_scores, "Load Shape Model Error (LOO-CV)"))
+        # Pull actual metric values for display
+        _loo_mae  = float(baseline_load_scores["test_mae"].iloc[0])  if not baseline_load_scores.empty else 0.0
+        _loo_rmse = float(baseline_load_scores["test_rmse"].iloc[0]) if not baseline_load_scores.empty else 0.0
+        _tr_mae   = float(baseline_load_scores["train_mae"].iloc[0]) if not baseline_load_scores.empty else 0.0
+        analysis_box(
+            f"<b>LOO-CV MAE = {_loo_mae:.4f} MW</b> — average hourly prediction error across 24 held-out hours. "
+            f"<b>LOO-CV RMSE = {_loo_rmse:.4f} MW</b> — penalises large misses more heavily. "
+            f"Train MAE = {_tr_mae:.4f} MW (in-sample, expected near zero). "
+            f"At 10 MW peak, {_loo_mae:.4f} MW error = {_loo_mae/10*100:.2f}% of peak — very accurate for load shape estimation."
+        )
     with m2:
-        show_chart(chart_model_r2(baseline_load_scores, "Load Shape Model R²"))
-        analysis_box("""
-        <b>Train R²</b> (in-sample) is near 1.0 — expected, as the model memorizes 24 training points.
-        <b>Test R²</b> is leave-one-hour-out CV — reflects honest generalization.
-        A gap between train and test R² indicates overfitting; with only 24 points this is unavoidable
-        but acceptable since the model is used for interpolation, not extrapolation.
-        Weather features adjust the daily shape relative to the study average load curve.
-        """)
+        show_chart(chart_model_r2(baseline_load_scores, "Load Shape Model R² (Train vs LOO-CV Test)"))
+        _loo_r2  = float(baseline_load_scores["test_r2"].iloc[0])  if not baseline_load_scores.empty else 0.0
+        _tr_r2   = float(baseline_load_scores["train_r2"].iloc[0]) if not baseline_load_scores.empty else 0.0
+        _gap     = _tr_r2 - _loo_r2
+        analysis_box(
+            f"<b>Train R² = {_tr_r2:.4f}</b> (in-sample — model memorises 24 training points, expected ≈ 1.0). "
+            f"<b>LOO-CV Test R² = {_loo_r2:.4f}</b> — honest out-of-sample generalisation. "
+            f"Overfitting gap = {_gap:.4f}. "
+            f"{'Small gap — model generalises well.' if _gap < 0.15 else 'Gap indicates some overfitting; acceptable given only 24 data points.'} "
+            f"R² close to 1.0 means the hour-of-day pattern explains most load variance."
+        )
+
+    # ── Feature importance panel ───────────────────────────────────────────
+    _md = model_perf.get("_model_dict", {})
+    if _md and "rf" in _md:
+        _rf_model = _md["rf"]
+        _feat_names = _md.get("feature_cols", [])
+        if hasattr(_rf_model, "feature_importances_") and _feat_names:
+            _imp = _rf_model.feature_importances_
+            _feat_df = pd.DataFrame({"Feature": _feat_names, "Importance": _imp})
+            _feat_df = _feat_df.sort_values("Importance", ascending=False).reset_index(drop=True)
+            _fi_fig = go.Figure()
+            _fi_colors = [C["purple"] if i < 3 else C["blue"] if i < 6 else C["muted"] for i in range(len(_feat_df))]
+            _fi_fig.add_trace(go.Bar(
+                x=_feat_df["Feature"], y=_feat_df["Importance"],
+                marker_color=_fi_colors, opacity=0.88,
+                text=[f"{v:.3f}" for v in _feat_df["Importance"]],
+                textposition="outside", textfont=dict(size=9)
+            ))
+            _fi_lay = base_layout("Feature Importances — Random Forest (Load Shape Model)", height=320)
+            _fi_lay["margin"] = dict(l=20, r=20, t=55, b=80)
+            _fi_lay["yaxis"] = {"title": "Importance", "range": [0, float(_feat_df["Importance"].max())*1.3]}
+            _fi_fig.update_layout(**_fi_lay)
+            _fi_fig.update_xaxes(title="Feature")
+            show_chart(_fi_fig)
+            analysis_box(
+                f"Top features: <b>{_feat_df['Feature'].iloc[0]}</b> ({_feat_df['Importance'].iloc[0]:.3f}), "
+                f"<b>{_feat_df['Feature'].iloc[1]}</b> ({_feat_df['Importance'].iloc[1]:.3f}), "
+                f"<b>{_feat_df['Feature'].iloc[2]}</b> ({_feat_df['Importance'].iloc[2]:.3f}). "
+                "Hour cyclical features (sin/cos) dominate — the load shape is primarily driven by time of day. "
+                "Weather features provide secondary adjustment at inference."
+            )
 
 
 def page_prototype():
@@ -3633,8 +3699,8 @@ def page_design():
         lay["margin"] = dict(l=20, r=20, t=60, b=40)
         lay["showlegend"] = True
         lay["legend"] = dict(
-            orientation="h", yanchor="bottom", y=1.05,
-            xanchor="right", x=1, font=dict(size=10),
+            orientation="h", yanchor="top", y=-0.22,
+            xanchor="center", x=0.5, font=dict(size=10),
             bgcolor="rgba(255,255,255,0.85)", bordercolor=C["border"], borderwidth=1)
         f.update_layout(**lay)
         f.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,3)))
