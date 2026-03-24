@@ -1622,9 +1622,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
             mode="lines+markers", line=dict(color=C["orange"],width=3), marker=dict(size=5)))
         fv.add_trace(go.Scatter(x=_H, y=_V_CVR, name="With CVR",
             mode="lines+markers", line=dict(color=C["purple"],width=3,dash="dash"), marker=dict(size=5)))
-        fv.add_hline(y=1.05,line_dash="dot",line_color=C["warn"],annotation_text="Max 1.05 pu",annotation_font_size=9)
-        fv.add_hline(y=0.97,line_dash="dot",line_color=C["warn"],annotation_text="Target 0.97 pu",annotation_font_size=9)
-        fv.add_hline(y=0.95,line_dash="dot",line_color=C["bad"],annotation_text="Min 0.95 pu",annotation_font_size=9)
+        fv.add_hline(y=1.05,line_dash="dot",line_color=C["gold"],annotation_text="Max 1.05 pu",annotation_font_size=9)
+        fv.add_hline(y=0.97,line_dash="dot",line_color=C["gold"],annotation_text="Target 0.97 pu",annotation_font_size=9)
+        fv.add_hline(y=0.95,line_dash="dot",line_color=C["gold"],annotation_text="Min 0.95 pu",annotation_font_size=9)
         lay_v = base_layout("Load-Bus Voltage Compliance", height=320)
         lay_v["legend"] = dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1,
             font=dict(size=10),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
@@ -1773,13 +1773,13 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
     with de1:
         fb = go.Figure()
         fb.add_trace(go.Scatter(x=_H, y=_BR, name="Residential — Most Effective",
-            mode="lines", line=dict(color=C["purple"],width=2.5), showlegend=True))
+            mode="lines", line=dict(color=C["pink"],width=2.5), showlegend=True))
         fb.add_trace(go.Scatter(x=_H, y=_BC, name="Commercial — Most Effective",
             mode="lines", line=dict(color=C["blue"],width=2.5), showlegend=True))
         fb.add_trace(go.Scatter(x=_H, y=_WR, name="Residential — Least Effective",
-            mode="lines", line=dict(color=C["orange"],width=2,dash="dot"), showlegend=True))
+            mode="lines", line=dict(color=C["pink"],width=2,dash="dot"), showlegend=True))
         fb.add_trace(go.Scatter(x=_H, y=_WC, name="Commercial — Least Effective",
-            mode="lines", line=dict(color=C["gold"],width=2,dash="dot"), showlegend=True))
+            mode="lines", line=dict(color=C["blue"],width=2,dash="dot"), showlegend=True))
         fb.add_hline(y=2.0,line_dash="dot",line_color=C["bad"],
             annotation_text="2% requirement", annotation_font_size=9)
         # Avg difference annotation
@@ -1787,7 +1787,7 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
         fb.add_annotation(x=12, y=3.0,
             text=f"<b>Avg Difference = {avg_diff:.1f}%</b>",
             showarrow=False, bgcolor="rgba(255,255,255,0.8)",
-            bordercolor=C["purple"], borderwidth=1, font=dict(size=11,color=C["purple"]))
+            bordercolor=C["deep"], borderwidth=1, font=dict(size=11,color=C["text"]))
         lay_bw = base_layout("Most vs Least Effective Conditions for CVR in ZIP Mixture Load Types", height=360)
         lay_bw["legend"] = dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1,
             font=dict(size=9),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
@@ -1853,7 +1853,7 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
 
     ck1,ck2,ck3,ck4 = st.columns(4)
     with ck1: kpi("Best Load Type", _dx_best_lt, f"${_dx_best_daily:,.2f}/day at 10 MW peak")
-    with ck2: kpi("Best Annual Savings", f"${max(_dx_annual_all):,}", f"{_dx_best_lt} · ×365 days")
+    with ck2: kpi("Avg Annual Savings", f"${_DX_ANNUAL['All Avg']:,}", "Average across all 4 load types · ×365 days")
     with ck3: kpi("All-Type Average Daily", f"${sum(_DX_CS[h][4] for h in _DX_HOURS):,.2f}", "Average across all 4 load types")
     with ck4: kpi("TOU Rate Range", "9.8 – 20.3 ¢/kWh", "Ontario Off-Peak → On-Peak")
 
@@ -1943,19 +1943,24 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
         )
 
     with _cf4:
-        # Cumulative savings over day (all-avg)
-        _cumul_z   = np.cumsum([_DX_CS[h][0] for h in _DX_HOURS])
-        _cumul_i   = np.cumsum([_DX_CS[h][1] for h in _DX_HOURS])
-        _cumul_avg = np.cumsum([_DX_CS[h][4] for h in _DX_HOURS])
+        # Cumulative savings over day — all 4 categories
+        _cumul_z    = np.cumsum([_DX_CS[h][0] for h in _DX_HOURS])
+        _cumul_i    = np.cumsum([_DX_CS[h][1] for h in _DX_HOURS])
+        _cumul_res  = np.cumsum([_DX_CS[h][2] for h in _DX_HOURS])
+        _cumul_comm = np.cumsum([_DX_CS[h][3] for h in _DX_HOURS])
+        _cumul_avg  = np.cumsum([_DX_CS[h][4] for h in _DX_HOURS])
         _fc4 = go.Figure()
         _fc4.add_trace(go.Scatter(x=_DX_HOURS, y=_cumul_z,
             name="Constant-Z", mode="lines", line=dict(color=C["purple"],width=2.5)))
         _fc4.add_trace(go.Scatter(x=_DX_HOURS, y=_cumul_i,
             name="Constant-I", mode="lines", line=dict(color=C["blue"],width=2.5)))
+        _fc4.add_trace(go.Scatter(x=_DX_HOURS, y=_cumul_res,
+            name="ZIP-Residential", mode="lines", line=dict(color=C["orange"],width=2.5)))
+        _fc4.add_trace(go.Scatter(x=_DX_HOURS, y=_cumul_comm,
+            name="ZIP-Commercial", mode="lines", line=dict(color=C["gold"],width=2.5)))
         _fc4.add_trace(go.Scatter(x=_DX_HOURS, y=_cumul_avg,
             name="All-Type Avg", mode="lines",
-            line=dict(color=C["gold"],width=2.5,dash="dot"),
-            fill="tozeroy", fillcolor="rgba(255,166,0,0.08)"))
+            line=dict(color=C["muted"],width=2,dash="dot")))
         for _hs, _he in [(8,11),(18,19)]:
             _fc4.add_vrect(x0=_hs-0.5, x1=_he+0.5,
                 fillcolor="rgba(230,57,70,0.07)", line_width=0)
@@ -2439,22 +2444,32 @@ def _interp_pf_reduction(pf: float, base_reduction: float) -> float:
     return base_reduction
 
 def _pf_scale_factor(pf: float) -> float:
-    """Return a multiplicative scale factor relative to PF=0.95 baseline.
-    PF 0.90 → 0.626, PF 0.95 → 1.000, PF 0.98 → 1.186 (from study data).
-    Linearly interpolated between study points.
+    """Return a multiplicative scale factor relative to the NEAREST study PF.
+    When pf == snap_pf(pf), returns exactly 1.0 (no scaling).
+    When pf is between study points, returns interpolated ratio vs snapped point.
+    Examples:
+      PF=0.90 (study point) → 1.0
+      PF=0.95 (study point) → 1.0
+      PF=0.98 (study point) → 1.0
+      PF=0.93 (between 0.90 and 0.95) → interp(0.93)/known(0.90 or 0.95)
     """
     pf = float(np.clip(pf, 0.90, 0.98))
     pfs  = _STUDY_PFS
     reds = [_STUDY_PF_REDUCTIONS[p] for p in pfs]
-    ref  = _STUDY_PF_REDUCTIONS[0.95]
-    # linear interpolation
+    # Reference: the nearest study PF's known reduction
+    snap = min(pfs, key=lambda x: abs(x - pf))
+    ref  = _STUDY_PF_REDUCTIONS[snap]
+    # Interpolate target reduction at sel_pf
+    if pf <= pfs[0]:
+        return reds[0] / ref
+    if pf >= pfs[-1]:
+        return reds[-1] / ref
     for i in range(len(pfs)-1):
         if pfs[i] <= pf <= pfs[i+1]:
             t = (pf - pfs[i]) / (pfs[i+1] - pfs[i])
             val = reds[i] + t * (reds[i+1] - reds[i])
             return val / ref
-    if pf <= pfs[0]:  return reds[0] / ref
-    return reds[-1] / ref
+    return 1.0
 
 def _snap_pf(pf: float) -> float:
     """Return the nearest study PF — used only for data lookup, not for scaling."""
@@ -2704,8 +2719,7 @@ def page_ai(constz_raw, consti_raw, zip_raw):
         f"{sel_lt} · PF {sel_pf:.2f} · PV Bus {sel_bus} · {sel_size:.3f} MVA · "
         f"{sel_sun.title()} · {sel_peak_mw:.0f} MW peak")
     k1, k2, k3, k4, k5, k6 = st.columns(6)
-    _snapped_pf = _snap_pf(float(sel_pf)); _snap_note = f" (using {_snapped_pf:.2f})" if abs(_snapped_pf - float(sel_pf)) > 0.001 else ""
-    with k1: kpi("Selected Case", f"PF {sel_pf}{_snap_note} · Bus {sel_bus}", f"{sel_lt} · {sel_size:.3f} MVA · {sel_sun.title()}")
+    with k1: kpi("Selected Case", f"PF {sel_pf:.2f} · Bus {sel_bus}", f"{sel_lt} · {sel_size:.3f} MVA · {sel_sun.title()}")
     with k2: kpi("Peak Load", f"{sel_peak_mw:.1f} MW", "User-selected feeder peak")
     with k3: kpi("Avg CVR Reduction", f"{avg_red_pct:.2f}%", "From PSSE study for this exact case")
     with k4: kpi("Daily Energy Saved", f"{daily_energy_mwh:.2f} MWh", "MW saved × 24 hrs, scaled to peak")
@@ -2784,10 +2798,11 @@ def page_ai(constz_raw, consti_raw, zip_raw):
                                else _CS[h][4] for h in HOURS])
     # Scale from study 10 MW peak to user-selected peak (conservative cap at 1×)
     _excel_scale  = min(float(sel_peak_mw) / STUDY_PEAK_MW, 1.0)
-    _scaled_save  = _excel_hourly * _excel_scale
+    # Apply PF interpolation to cost savings (same factor used for % reduction)
+    _scaled_save  = _excel_hourly * _excel_scale * _pf_scale
     _daily_save   = float(_scaled_save.sum())
     _annual_study = _ANNUAL.get(sel_lt, _ANNUAL["All Avg"])
-    _annual_scaled = _annual_study * _excel_scale
+    _annual_scaled = _annual_study * _excel_scale * _pf_scale
 
     # TOU rate array for overlay
     tou_arr_plot = np.array([TOU_RATES[h] for h in HOURS])
