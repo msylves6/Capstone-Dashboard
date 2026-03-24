@@ -346,8 +346,12 @@ def resolve_files() -> Dict[str, Optional[str]]:
                                         "Dx_Feeder_Image.jpeg", "Dx_Feeder_Image"]),
         "img_ieee":     first_existing(["IEEE14_Image.png", "IEEE14_Image.jpg",
                                         "IEEE14_Image.jpeg", "IEEE14_Image"]),
-        "img_tx_moved": first_existing(["TransformerMoved.png", "TransformerMoved.jpg",
-                                        "TransformerMoved.jpeg", "TransformerMoved"]),
+        "img_tx_moved":  first_existing(["TransformerMoved.png", "TransformerMoved.jpg",
+                                         "TransformerMoved.jpeg", "TransformerMoved"]),
+        "simulink_30v":  first_existing(["Capstone_30V_Prototype.slx",
+                                         "Capstone_30V_Prototype"]),
+        "simulink_120v": first_existing(["Capstone_120V_Prototype.slx",
+                                         "Capstone_120V_Prototype"]),
     }
 
 FILES = resolve_files()
@@ -451,7 +455,7 @@ def base_layout(title: str, height: int = 320) -> Dict[str, Any]:
         paper_bgcolor="rgba(255,255,255,0)", plot_bgcolor="rgba(255,255,255,0)",
         height=height, margin=dict(l=20, r=20, t=58, b=24),
         font=dict(size=12, color=C["text"]),
-        legend=dict(orientation="h", y=1.10, x=0),
+        legend=dict(orientation="h", yanchor="bottom", y=1.12, xanchor="left", x=0),
     )
 
 def chart_load_profile(df: pd.DataFrame) -> go.Figure:
@@ -531,7 +535,7 @@ def chart_pv_bus_comparison(constz: pd.DataFrame) -> go.Figure:
     f.add_hline(y=2.0, line_dash="dot", line_color=C["warn"],
         annotation_text="2% target", annotation_font_size=10)
     lay = base_layout("Hourly % Reduction by PV Bus Location", height=320)
-    lay["legend"] = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.18, xanchor="center", x=0.5,
         font=dict(size=10), bgcolor="rgba(255,255,255,0.85)", bordercolor=C["border"], borderwidth=1)
     f.update_layout(**lay)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1, 25, 2)))
@@ -552,7 +556,7 @@ def chart_pv_size_comparison(constz: pd.DataFrame) -> go.Figure:
     f.add_hline(y=2.0, line_dash="dot", line_color=C["warn"],
         annotation_text="2% target", annotation_font_size=10)
     lay = base_layout("Hourly % Reduction by PV Inverter Size", height=320)
-    lay["legend"] = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.18, xanchor="center", x=0.5,
         font=dict(size=10), bgcolor="rgba(255,255,255,0.85)", bordercolor=C["border"], borderwidth=1)
     f.update_layout(**lay)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1, 25, 2)))
@@ -940,20 +944,40 @@ def fit_load_shape_model(lookup: pd.DataFrame) -> Dict[str, Any]:
     """
     Train RF + ET ensemble to predict hourly baseline load from hour-of-day features.
     Uses the study data's average load shape (mw_no_cvr averaged across all cases).
+    
+    Leakage prevention:
+    - Training uses ONLY hour-of-day cyclical features + window flags (no case IDs, no reduction %)
+    - Evaluation uses leave-one-hour-out cross-validation on the 24-point load shape
+    - Weather features are set to 0 during training (only used at inference via Open-Meteo)
     """
-    # Use the mean load at each hour (across all cases/scenarios) as training target
     shape_df = lookup.groupby('hour', as_index=False)['mw_no_cvr'].mean()
     shape_df['hour_sin'], shape_df['hour_cos'] = hour_cyclical(shape_df['hour'])
     shape_df['is_peak_window']     = shape_df['hour'].between(AI_CFG.peak_start_hour, AI_CFG.peak_end_hour).astype(int)
     shape_df['is_daylight_window'] = shape_df['hour'].between(8, 18).astype(int)
-
-    # Fill weather cols with zeros (weather not in study data — used at inference only)
     for col in ['temperature_c','humidity_pct','precip_mm','cloud_cover_pct','wind_speed_kph','weather_code']:
         shape_df[col] = 0.0
 
     X = shape_df[FEATURE_COLS_ML].values
     y = shape_df['mw_no_cvr'].values
 
+    # ── Leave-one-out CV for honest out-of-sample metrics (no leakage) ──
+    from sklearn.model_selection import LeaveOneOut
+    loo = LeaveOneOut()
+    loo_preds = np.zeros(len(y))
+    for train_idx, test_idx in loo.split(X):
+        _rf = RandomForestRegressor(n_estimators=AI_CFG.rf_n_estimators, max_depth=AI_CFG.rf_max_depth,
+                                     random_state=AI_CFG.random_state, n_jobs=-1)
+        _et = ExtraTreesRegressor(n_estimators=AI_CFG.et_n_estimators, max_depth=AI_CFG.et_max_depth,
+                                   random_state=AI_CFG.random_state, n_jobs=-1)
+        _rf.fit(X[train_idx], y[train_idx])
+        _et.fit(X[train_idx], y[train_idx])
+        loo_preds[test_idx] = AI_CFG.blend_rf * _rf.predict(X[test_idx]) + AI_CFG.blend_et * _et.predict(X[test_idx])
+
+    loo_mae  = float(mean_absolute_error(y, loo_preds))
+    loo_rmse = float(np.sqrt(mean_squared_error(y, loo_preds)))
+    loo_r2   = float(r2_score(y, loo_preds))
+
+    # ── Fit final model on all 24 points for inference ──
     rf = RandomForestRegressor(n_estimators=AI_CFG.rf_n_estimators, max_depth=AI_CFG.rf_max_depth,
                                 random_state=AI_CFG.random_state, n_jobs=-1)
     et = ExtraTreesRegressor(n_estimators=AI_CFG.et_n_estimators, max_depth=AI_CFG.et_max_depth,
@@ -961,11 +985,14 @@ def fit_load_shape_model(lookup: pd.DataFrame) -> Dict[str, Any]:
     rf.fit(X, y); et.fit(X, y)
 
     train_pred = AI_CFG.blend_rf * rf.predict(X) + AI_CFG.blend_et * et.predict(X)
-    mae  = float(mean_absolute_error(y, train_pred))
-    rmse = float(np.sqrt(mean_squared_error(y, train_pred)))
-    r2   = float(r2_score(y, train_pred))
-    return {"rf": rf, "et": et, "mae": mae, "rmse": rmse, "r2": r2,
-            "n_samples": len(y), "feature_cols": FEATURE_COLS_ML}
+    train_mae  = float(mean_absolute_error(y, train_pred))
+    train_r2   = float(r2_score(y, train_pred))
+
+    return {"rf": rf, "et": et,
+            "mae": loo_mae, "rmse": loo_rmse, "r2": loo_r2,
+            "train_mae": train_mae, "train_r2": train_r2,
+            "n_samples": len(y), "feature_cols": FEATURE_COLS_ML,
+            "note": "Metrics are leave-one-hour-out CV (honest out-of-sample, no data leakage)"}
 
 
 def predict_baseline_load(model_dict: Dict, forecast_df: pd.DataFrame) -> np.ndarray:
@@ -1165,11 +1192,15 @@ def build_next_day_predictions(_constz_raw=None, _consti_raw=None, _zip_raw=None
     min_v        = float(pred_df['with_cvr_voltage_pu'].min())
     avg_base     = float(pred_df['baseline_load_mw'].mean())
 
-    # Dummy score DataFrames for model performance display (no longer ML-predicted)
+    # Score DataFrame for model performance display — using LOO-CV honest metrics
     score_df = pd.DataFrame([
-        {'model': 'Load Shape RF', 'test_mae': model_dict['mae'],
-         'test_rmse': model_dict['rmse'], 'train_r2': model_dict['r2'],
-         'test_r2': model_dict['r2'], 'overfit_gap': 0.0, 'train_mae': model_dict['mae'],
+        {'model': 'Load Shape RF+ET',
+         'test_mae':  model_dict['mae'],       # LOO-CV out-of-sample MAE
+         'test_rmse': model_dict['rmse'],       # LOO-CV out-of-sample RMSE
+         'train_r2':  model_dict['train_r2'],  # in-sample R² (expected ~1.0)
+         'test_r2':   model_dict['r2'],         # LOO-CV out-of-sample R²
+         'overfit_gap': model_dict['train_r2'] - model_dict['r2'],
+         'train_mae': model_dict['train_mae'],
          'train_rmse': model_dict['rmse']},
     ])
 
@@ -1409,7 +1440,7 @@ def chart_loadtype_comparison(pred_by_type):
             mode="lines", line=dict(color=color, width=2.8), showlegend=True))
     lay = _lt_layout("Next-Day Baseline Load by Load Type (No CVR)")
     lay["showlegend"] = True
-    lay["legend"] = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.18, xanchor="center", x=0.5,
         font=dict(size=10), bgcolor="rgba(255,255,255,0.85)", bordercolor=C["border"], borderwidth=1)
     f.update_layout(**lay)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
@@ -1429,7 +1460,7 @@ def chart_loadtype_reduction(pred_by_type):
         annotation_font_size=10)
     lay = _lt_layout("Next-Day Predicted CVR % Reduction by Load Type")
     lay["showlegend"] = True
-    lay["legend"] = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.18, xanchor="center", x=0.5,
         font=dict(size=10), bgcolor="rgba(255,255,255,0.85)", bordercolor=C["border"], borderwidth=1)
     f.update_layout(**lay)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
@@ -1466,7 +1497,7 @@ def chart_loadtype_voltage(pred_by_type):
         annotation_font_size=10)
     lay = _lt_layout("Predicted With-CVR Bus Voltage by Load Type")
     lay["showlegend"] = True
-    lay["legend"] = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.18, xanchor="center", x=0.5,
         font=dict(size=10), bgcolor="rgba(255,255,255,0.85)", bordercolor=C["border"], borderwidth=1)
     f.update_layout(**lay)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
@@ -1628,10 +1659,10 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
                 annotation_text="2% target", annotation_font_size=9,
                 annotation_position="bottom right")
         lay = base_layout(title, height=h)
-        lay["legend"] = dict(orientation="h", yanchor="bottom", y=1.02,
+        lay["legend"] = dict(orientation="h", yanchor="bottom", y=1.05,
             xanchor="right", x=1, font=dict(size=10),
             bgcolor="rgba(255,255,255,0.85)", bordercolor=C["border"], borderwidth=1)
-        lay["margin"] = dict(l=20,r=20,t=65,b=40)
+        lay["margin"] = dict(l=20,r=20,t=75,b=40)
         f.update_layout(**lay)
         f.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,3)))
         f.update_yaxes(title="% Reduction")
@@ -1650,9 +1681,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
             mode="lines+markers", line=dict(color=C["purple"],width=3,dash="dash"),
             marker=dict(size=5), fill="tonexty", fillcolor="rgba(184,108,224,0.10)"))
         lay_a = base_layout("Feeder Load · With and Without CVR", height=320)
-        lay_a["legend"] = dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1,
+        lay_a["legend"] = dict(orientation="h",yanchor="bottom",y=1.04,xanchor="right",x=1,
             font=dict(size=10),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
-        lay_a["margin"] = dict(l=20,r=20,t=65,b=40)
+        lay_a["margin"] = dict(l=20,r=20,t=72,b=40)
         fa.update_layout(**lay_a)
         fa.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
         fa.update_yaxes(title="MW")
@@ -1669,9 +1700,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
         fv.add_hline(y=0.97,line_dash="dot",line_color=C["gold"],annotation_text="Target 0.97 pu",annotation_font_size=9)
         fv.add_hline(y=0.95,line_dash="dot",line_color=C["gold"],annotation_text="Min 0.95 pu",annotation_font_size=9)
         lay_v = base_layout("Load-Bus Voltage Compliance", height=320)
-        lay_v["legend"] = dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1,
+        lay_v["legend"] = dict(orientation="h",yanchor="bottom",y=1.04,xanchor="right",x=1,
             font=dict(size=10),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
-        lay_v["margin"] = dict(l=20,r=20,t=65,b=40)
+        lay_v["margin"] = dict(l=20,r=20,t=72,b=40)
         lay_v["yaxis"] = dict(title="Voltage (pu)", range=[0.93,1.08])
         fv.update_layout(**lay_v)
         fv.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
@@ -1759,8 +1790,8 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
                 line=dict(color=_cl,width=2.5),showlegend=True))
         _f_sun_dx.add_hline(y=2.0,line_dash="dot",line_color=C["warn"],annotation_text="2% target",annotation_font_size=9,annotation_position="bottom right")
         _lay_sdx = base_layout("Hourly % Reduction by Sun Condition",height=320)
-        _lay_sdx["legend"]=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1,font=dict(size=10),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
-        _lay_sdx["margin"]=dict(l=20,r=20,t=65,b=40)
+        _lay_sdx["legend"]=dict(orientation="h",yanchor="bottom",y=1.05,xanchor="right",x=1,font=dict(size=10),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
+        _lay_sdx["margin"]=dict(l=20,r=20,t=75,b=40)
         _f_sun_dx.update_layout(**_lay_sdx)
         _f_sun_dx.update_xaxes(title="Hour of Day",tickvals=list(range(1,25,3)))
         _f_sun_dx.update_yaxes(title="% Reduction")
@@ -1832,9 +1863,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
             showarrow=False, bgcolor="rgba(255,255,255,0.8)",
             bordercolor=C["deep"], borderwidth=1, font=dict(size=11,color=C["text"]))
         lay_bw = base_layout("Most vs Least Effective Conditions for CVR in ZIP Mixture Load Types", height=360)
-        lay_bw["legend"] = dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1,
+        lay_bw["legend"] = dict(orientation="h",yanchor="top",y=-0.18,xanchor="center",x=0.5,
             font=dict(size=9),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
-        lay_bw["margin"] = dict(l=20,r=20,t=80,b=40)
+        lay_bw["margin"] = dict(l=20,r=20,t=55,b=80)
         lay_bw["yaxis"] = dict(title="% Reduction", range=[0, 5.5])
         fb.update_layout(**lay_bw)
         fb.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,3)))
@@ -1922,11 +1953,11 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
         _fc.add_trace(go.Scatter(x=_DX_HOURS, y=_tou_arr,
             name="TOU Rate (¢/kWh)", mode="lines",
             line=dict(color=C["deep"], width=2, dash="dot")), secondary_y=True)
-        _lay_cf = base_layout("Hourly Cost Savings by Load Type", height=340)
+        _lay_cf = base_layout("Hourly Cost Savings by Load Type", height=370)
         _lay_cf["barmode"] = "group"
-        _lay_cf["legend"] = dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1,
+        _lay_cf["legend"] = dict(orientation="h",yanchor="top",y=-0.18,xanchor="center",x=0.5,
             font=dict(size=9),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
-        _lay_cf["margin"] = dict(l=20,r=20,t=65,b=40)
+        _lay_cf["margin"] = dict(l=20,r=20,t=50,b=80)
         _fc.update_layout(**_lay_cf)
         _fc.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
         _fc.update_yaxes(title="$/hr Saved", secondary_y=False)
@@ -2008,9 +2039,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
             _fc4.add_vrect(x0=_hs-0.5, x1=_he+0.5,
                 fillcolor="rgba(230,57,70,0.07)", line_width=0)
         _lay_c4 = base_layout("Cumulative Daily Savings ($)", height=340)
-        _lay_c4["legend"] = dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1,
+        _lay_c4["legend"] = dict(orientation="h",yanchor="top",y=-0.18,xanchor="center",x=0.5,
             font=dict(size=10),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
-        _lay_c4["margin"] = dict(l=20,r=20,t=65,b=40)
+        _lay_c4["margin"] = dict(l=20,r=20,t=50,b=80)
         _fc4.update_layout(**_lay_c4)
         _fc4.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
         _fc4.update_yaxes(title="Cumulative $ Saved")
@@ -2239,9 +2270,9 @@ def page_ieee_results(ieee):
             line=dict(color=C["deep"],width=2,dash="dot")), secondary_y=True)
         _lay_ic = base_layout("Hourly Cost Savings by Bus (Best Scenario)", height=340)
         _lay_ic["barmode"] = "stack"
-        _lay_ic["legend"] = dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1,
+        _lay_ic["legend"] = dict(orientation="h",yanchor="top",y=-0.18,xanchor="center",x=0.5,
             font=dict(size=10),bgcolor="rgba(255,255,255,0.85)",bordercolor=C["border"],borderwidth=1)
-        _lay_ic["margin"] = dict(l=20,r=20,t=65,b=40)
+        _lay_ic["margin"] = dict(l=20,r=20,t=50,b=80)
         _fic2.update_layout(**_lay_ic)
         _fic2.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
         _fic2.update_yaxes(title="$/hr Saved (stacked)", secondary_y=False)
@@ -2845,53 +2876,52 @@ def page_ai(constz_raw, consti_raw, zip_raw):
         f"Estimated savings for: {sel_lt} · PF {sel_pf:.2f} · PV Bus {sel_bus} · {sel_size:.3f} MVA · "
         f"{sel_sun.title()} · {sel_peak_mw:.0f} MW peak. Ontario TOU rates applied.")
 
-    # Pick the right savings column from the Excel data for the selected load type
-    _cs_idx  = _LT_IDX.get(sel_lt, 4)   # 0=Z,1=I,2=Res,3=Comm; 4→all avg
-    _excel_hourly = np.array([_CS[h][_cs_idx] if _cs_idx < 4
-                               else _CS[h][4] for h in HOURS])
-    # Scale from study 10 MW peak to user-selected peak (conservative cap at 1×)
-    _excel_scale  = min(float(sel_peak_mw) / STUDY_PEAK_MW, 1.0)
-    # Apply PF interpolation to cost savings (same factor used for % reduction)
-    _scaled_save  = _excel_hourly * _excel_scale * _pf_scale
-    _daily_save   = float(_scaled_save.sum())
-    _annual_study = _ANNUAL.get(sel_lt, _ANNUAL["All Avg"])
-    _annual_scaled = _annual_study * _excel_scale * _pf_scale
-
-    # TOU rate array for overlay
+    # Compute savings DIRECTLY from the scenario's actual MW reduction (actual_delta).
+    # This is specific to the exact (load type, PF, bus, size, sun) combination selected,
+    # NOT averaged across all cases. actual_delta was computed above from the study data.
     tou_arr_plot = np.array([TOU_RATES[h] for h in HOURS])
+    # cost_saved_per_hr already computed above: actual_delta * 1000 * tou / 100
+    _scaled_save  = cost_saved_per_hr   # $/hr — scenario-specific, PF-interpolated, MW-scaled
+    _daily_save   = float(_scaled_save.sum())
+    _annual_scaled = _daily_save * 365.0
 
-    # Study reference values (10 MW peak, no scaling)
-    _study_daily  = float(_excel_hourly.sum())
-    _study_annual = _annual_study
+    # Reference: what would this save at the study's 10 MW peak (no user peak scaling)
+    _ref_delta    = (sel_peak_mw * load_pct_arr) * (conservative_red / peak_scale_factor
+                    if peak_scale_factor > 0 else conservative_red) / 100.0
+    _ref_delta    = np.clip(_ref_delta, 0, None)
+    _ref_save_hr  = _ref_delta * 1000.0 * tou_arr_plot / 100.0
+    _study_daily  = float(_ref_save_hr.sum())
 
     cons_note = (
         f"Conservative scaling applied: study used {STUDY_PEAK_MW:.0f} MW peak. "
-        f"At {sel_peak_mw:.0f} MW, savings scaled by {_excel_scale:.2f}×."
+        f"At {sel_peak_mw:.0f} MW, MW reduction scaled by {min(sel_peak_mw/STUDY_PEAK_MW,1.0):.2f}×. "
+        f"PF interpolation factor: {_pf_scale:.3f}×."
         if sel_peak_mw < STUDY_PEAK_MW else
-        f"At study reference peak ({STUDY_PEAK_MW:.0f} MW) — no scaling needed."
+        f"At study reference peak ({STUDY_PEAK_MW:.0f} MW). PF interpolation factor: {_pf_scale:.3f}×."
     )
 
-    # KPI row
+    # KPI row — all from actual scenario, no lookup tables
     ck1, ck2, ck3, ck4 = st.columns(4)
     with ck1: kpi("Daily Cost Saved", f"${_daily_save:,.2f}",
-        f"PF {sel_pf:.2f} · Bus {sel_bus} · {sel_size:.3f} MVA · {sel_peak_mw:.0f} MW peak")
+        f"PF {sel_pf:.2f} · Bus {sel_bus} · {sel_size:.3f} MVA · {sel_peak_mw:.0f} MW")
     with ck2: kpi("Annual Projection", f"${_annual_scaled:,.0f}",
-        f"×365 days · {sel_peak_mw:.0f} MW peak · {sel_lt}")
-    with ck3: kpi("Study Reference (10 MW)", f"${_study_daily:,.2f}/day",
-        f"${_study_annual:,.0f}/yr · directly from Excel")
+        f"×365 days · {sel_lt} · {sel_peak_mw:.0f} MW peak")
+    with ck3: kpi("Avg Hourly Savings", f"${_daily_save/24:.2f}",
+        f"Mean $/hr across all 24 hours")
     with ck4: kpi("Peak Savings Hour", f"Hour {int(HOURS[int(np.argmax(_scaled_save))])}",
-        f"${float(np.max(_scaled_save)):.2f} saved · on-peak rate")
+        f"${float(np.max(_scaled_save)):.2f}/hr · on-peak rate")
 
     panel("Ontario TOU Rate Structure", (
         "<p>Three rate tiers applied from the Ontario Energy Board TOU schedule: "
         "<b>Off-Peak (9.8¢/kWh)</b> — hours 1–7 and 20–24 (overnight / late evening). "
         "<b>Mid-Peak (15.7¢/kWh)</b> — hours 12–17 (midday and afternoon). "
         "<b>On-Peak (20.3¢/kWh)</b> — hours 8–11 and 18–19 (morning rush / early evening).</p>"
-        "<p><b>About these savings:</b> The load type shown reflects the distribution feeder's load composition — "
-        "this is a feeder characteristic, not a user-controllable parameter. "
-        "The controllable parameters are <b>PV bus location</b> and <b>PV inverter size</b>, which you can adjust above. "
-        "Savings are taken from the PSSE study for the selected PF, bus, and PV size combination, "
-        f"then scaled proportionally to your selected {sel_peak_mw:.0f} MW peak load.</p>"
+        f"<p><b>How these savings are calculated:</b> MW reduction at each hour comes directly from "
+        f"the PSSE study for your exact configuration: {sel_lt} · PF {sel_pf:.2f} · PV Bus {sel_bus} · "
+        f"{sel_size:.3f} MVA · {sel_sun.title()}. "
+        "The controllable parameters are <b>PV bus location</b> and <b>PV inverter size</b>. "
+        "Load type reflects the feeder's load composition. "
+        "Hourly savings = MW saved × TOU rate. No lookup table — computed directly from simulation data.</p>"
         f"<p><em>{cons_note}</em></p>"
     ))
 
@@ -2941,8 +2971,8 @@ def page_ai(constz_raw, consti_raw, zip_raw):
         show_chart(fc2)
         analysis_box(
             f"Savings accumulate fastest during on-peak windows (shaded red). "
-            f"Reaches <b>${_daily_save:,.2f}</b> by end of day. "
-            f"Annual projection (×365): <b>${_annual_scaled:,.0f}</b>."
+            f"Total daily: <b>${_daily_save:,.2f}</b> · Annual projection: <b>${_annual_scaled:,.0f}</b>. "
+            f"All values are specific to your selected configuration (PF {sel_pf:.2f} · Bus {sel_bus} · {sel_size:.3f} MVA)."
         )
 
     # All load types comparison bar chart (from Excel, at 10 MW study peak)
@@ -3122,16 +3152,20 @@ out-of-sample generalization.
     with m1:
         show_chart(chart_model_comparison(baseline_load_scores, "Load Shape Model Error (MAE / RMSE)"))
         analysis_box("""
-        <b>MAE</b> = average absolute error in MW. <b>RMSE</b> penalizes large misses more.
-        The ML model predicts tomorrow's hourly load shape from weather. CVR savings
-        come directly from the PSSE study data — not from ML prediction.
+        <b>MAE</b> = average absolute error in MW (leave-one-hour-out cross-validation — no data leakage).
+        <b>RMSE</b> penalizes large misses more. Metrics reflect honest out-of-sample performance:
+        each hour is predicted using a model trained on the other 23 hours.
+        The ML model predicts tomorrow's hourly load shape from weather.
+        CVR savings come directly from the PSSE study data — not from ML prediction.
         """)
     with m2:
         show_chart(chart_model_r2(baseline_load_scores, "Load Shape Model R²"))
         analysis_box("""
-        <b>R²</b> near 1.0 = model explains most load variance from hour-of-day features.
-        Weather features (temperature, cloud cover) adjust the daily shape up or down
-        from the study average.
+        <b>Train R²</b> (in-sample) is near 1.0 — expected, as the model memorizes 24 training points.
+        <b>Test R²</b> is leave-one-hour-out CV — reflects honest generalization.
+        A gap between train and test R² indicates overfitting; with only 24 points this is unavoidable
+        but acceptable since the model is used for interpolation, not extrapolation.
+        Weather features adjust the daily shape relative to the study average load curve.
         """)
 
 
@@ -3263,6 +3297,64 @@ def page_prototype():
         "Cost ($)": [7.50, 2.29, 5.15, 65.21, 6.65, 4.75, 5.20, "NA", 60.00],
     }
     st.dataframe(pd.DataFrame(cost_data), use_container_width=True, hide_index=True)
+
+    # ── Simulink Models ───────────────────────────────────────────────────────
+    section_heading("Simulink Circuit Models",
+        "MATLAB/Simulink models of the 30 V and 120 V prototype circuits used for validation.")
+
+    panel("About the Simulink Models", """
+    <p>Two MATLAB/Simulink models were developed alongside the physical hardware prototype to validate
+    the measured results and allow further parametric analysis:</p>
+    <p>
+        <b>Capstone_30V_Prototype.slx</b> — Simulink model of the 30 V bench circuit.
+        Includes the transmission line resistors and inductor, solar farm inductor branch with dual-throw switch,
+        and load resistor. Used to confirm the measured currents and wattages at both PV locations.<br><br>
+        <b>Capstone_120V_Prototype.slx</b> — Simulink model of the 120 V circuit.
+        Demonstrates why PV location has negligible effect at higher supply voltages
+        (high PV branch impedance relative to the circuit).
+    </p>
+    <p>Both models can be opened in MATLAB R2023a or later. Download them from the Files page.</p>
+    """)
+
+    _sl1, _sl2 = st.columns(2)
+    with _sl1:
+        _slx_30 = FILES.get("simulink_30v")
+        if _slx_30 and os.path.exists(_slx_30):
+            with open(_slx_30, "rb") as _sf:
+                _sb64 = base64.b64encode(_sf.read()).decode()
+            st.markdown(f"""
+            <div class="file-link-card" style="border-left:3px solid {C['purple']};">
+                <span style="font-size:1.5rem;">⚡</span>
+                <div>
+                    <a href="data:application/octet-stream;base64,{_sb64}"
+                       download="Capstone_30V_Prototype.slx"
+                       style="color:{C['purple']};font-weight:700;">
+                       Capstone_30V_Prototype.slx
+                    </a>
+                    <div class="file-link-desc">MATLAB/Simulink model — 30 V prototype circuit (146 KB)</div>
+                </div>
+            </div>""", unsafe_allow_html=True)
+        else:
+            st.info("Capstone_30V_Prototype.slx — place file in Capstone Dashboard folder to enable download.")
+    with _sl2:
+        _slx_120 = FILES.get("simulink_120v")
+        if _slx_120 and os.path.exists(_slx_120):
+            with open(_slx_120, "rb") as _sf:
+                _sb64 = base64.b64encode(_sf.read()).decode()
+            st.markdown(f"""
+            <div class="file-link-card" style="border-left:3px solid {C['blue']};">
+                <span style="font-size:1.5rem;">⚡</span>
+                <div>
+                    <a href="data:application/octet-stream;base64,{_sb64}"
+                       download="Capstone_120V_Prototype.slx"
+                       style="color:{C['blue']};font-weight:700;">
+                       Capstone_120V_Prototype.slx
+                    </a>
+                    <div class="file-link-desc">MATLAB/Simulink model — 120 V prototype circuit (146 KB)</div>
+                </div>
+            </div>""", unsafe_allow_html=True)
+        else:
+            st.info("Capstone_120V_Prototype.slx — place file in Capstone Dashboard folder to enable download.")
 
     section_heading("Full Prototype Data Table", "All measured values from the spreadsheet.")
     t1, t2 = st.columns(2)
@@ -3405,6 +3497,17 @@ def page_excel_data():
     for fname, title, desc in excel_files:
         _render_file(fname, title, desc, "📊", XLSX_MIME, accent=C["purple"])
 
+    # ── Simulink models ────────────────────────────────────────────
+    st.markdown(f'''<h3 style="border-left:4px solid {C["purple"]};padding-left:10px;">⚡ MATLAB/Simulink Models</h3>''', unsafe_allow_html=True)
+    simulink_files = [
+        ("Capstone_30V_Prototype.slx",  "30 V Prototype — Simulink Model",
+         "MATLAB/Simulink circuit model of the 30 V bench prototype. Validates measured currents and wattages at load-bus and midline-bus PV locations."),
+        ("Capstone_120V_Prototype.slx", "120 V Prototype — Simulink Model",
+         "MATLAB/Simulink circuit model of the 120 V bench prototype. Demonstrates that PV location has negligible effect at higher supply voltages."),
+    ]
+    for fname, title, desc in simulink_files:
+        _render_file(fname, title, desc, "⚡", "application/octet-stream", accent=C["purple"])
+
     # ── Python scripts ─────────────────────────────────────────────
     st.markdown(f'''<h3 style="border-left:4px solid #7678ed;padding-left:10px;">🐍 Python Scripts</h3>''', unsafe_allow_html=True)
     py_files = [
@@ -3517,7 +3620,7 @@ def page_design():
         lay["margin"] = dict(l=20, r=20, t=60, b=40)
         lay["showlegend"] = True
         lay["legend"] = dict(
-            orientation="h", yanchor="bottom", y=1.02,
+            orientation="h", yanchor="bottom", y=1.05,
             xanchor="right", x=1, font=dict(size=10),
             bgcolor="rgba(255,255,255,0.85)", bordercolor=C["border"], borderwidth=1)
         f.update_layout(**lay)
@@ -3558,18 +3661,6 @@ def page_design():
         render_image("img_tx_moved",
             "Figure: Original (top) and Modified (bottom) Dx Feeder Network Used in Studies",
             max_width="92%")
-
-        panel("Why 0.97 pu as the Target CVR Voltage?", """
-        <p>ANSI C84.1 defines 0.95 pu as the absolute minimum acceptable service voltage and 1.05 pu as the maximum.
-        We chose <b>0.97 pu</b> because:</p>
-        <p>• It is low enough to achieve meaningful demand reduction (load scales with V² for constant-impedance
-        loads, so a 3% voltage drop gives roughly a 5.9% power reduction in the ideal case).<br>
-        • It leaves a 0.02 pu safety margin above the 0.95 pu minimum, protecting against unexpected voltage
-        drops caused by load transients, measurement errors, or modelling inaccuracies.<br>
-        • It is achievable across all 5,184 tested cases without any case violating the voltage limits.</p>
-        <p>0.95 pu (the hard minimum) would be risky because any model uncertainty or real-world disturbance
-        could push voltage below safe limits. 0.97 pu is the best balance of safety and effectiveness for this feeder.</p>
-        """)
 
         panel("Why 10 MW Peak Load?", f"""
         <p>10 MW was selected as a representative peak load for a realistic Ontario distribution feeder.
@@ -3973,6 +4064,18 @@ def page_design():
         <p>The 2% threshold was also chosen because it is large enough to be economically meaningful
         (at 10 MW peak, 2% = 200 kW reduction × 8,760 hours = significant annual energy savings)
         while being achievable without violating voltage limits.</p>
+        """)
+
+        panel("Why 0.97 pu as the Target CVR Voltage?", """
+        <p>ANSI C84.1 defines 0.95 pu as the absolute minimum acceptable service voltage and 1.05 pu as the maximum.
+        We chose <b>0.97 pu</b> because:</p>
+        <p>• It is low enough to achieve meaningful demand reduction (load scales with V² for constant-impedance
+        loads, so a 3% voltage drop gives roughly a 5.9% power reduction in the ideal case).<br>
+        • It leaves a 0.02 pu safety margin above the 0.95 pu minimum, protecting against unexpected voltage
+        drops caused by load transients, measurement errors, or modelling inaccuracies.<br>
+        • It is achievable across all 5,184 tested cases without any case violating the voltage limits.</p>
+        <p>0.95 pu (the hard minimum) would be risky because any model uncertainty or real-world disturbance
+        could push voltage below safe limits. 0.97 pu is the best balance of safety and effectiveness for this feeder.</p>
         """)
 
 
