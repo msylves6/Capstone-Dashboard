@@ -3183,9 +3183,9 @@ out-of-sample generalization.
     This guarantees no hour used for evaluation was seen during training — eliminating leakage entirely.</p>
 
     <p><b>Why train R² ≈ 1.0 is expected (not a red flag):</b> When all 24 points are used for training,
-    the ensemble memorises the load curve perfectly — this is unavoidable with 24 data points and
+    the ensemble memorizes the load curve perfectly — this is unavoidable with 24 data points and
     a tree-based model. The meaningful metric is the <b>LOO-CV Test R²</b>, which shows how well
-    the model generalises when predicting a held-out hour.
+    the model generalizes when predicting a held-out hour.
     High test R² means the cyclical hour features capture most of the load shape,
     and weather features provide additional adjustment at inference time.</p>
     """)
@@ -3199,7 +3199,7 @@ out-of-sample generalization.
         _tr_mae   = float(baseline_load_scores["train_mae"].iloc[0]) if not baseline_load_scores.empty else 0.0
         analysis_box(
             f"<b>LOO-CV MAE = {_loo_mae:.4f} MW</b> — average hourly prediction error across 24 held-out hours. "
-            f"<b>LOO-CV RMSE = {_loo_rmse:.4f} MW</b> — penalises large misses more heavily. "
+            f"<b>LOO-CV RMSE = {_loo_rmse:.4f} MW</b> — penalizes large misses more heavily. "
             f"Train MAE = {_tr_mae:.4f} MW (in-sample, expected near zero). "
             f"At 10 MW peak, {_loo_mae:.4f} MW error = {_loo_mae/10*100:.2f}% of peak — very accurate for load shape estimation."
         )
@@ -3209,10 +3209,10 @@ out-of-sample generalization.
         _tr_r2   = float(baseline_load_scores["train_r2"].iloc[0]) if not baseline_load_scores.empty else 0.0
         _gap     = _tr_r2 - _loo_r2
         analysis_box(
-            f"<b>Train R² = {_tr_r2:.4f}</b> (in-sample — model memorises 24 training points, expected ≈ 1.0). "
-            f"<b>LOO-CV Test R² = {_loo_r2:.4f}</b> — honest out-of-sample generalisation. "
+            f"<b>Train R² = {_tr_r2:.4f}</b> (in-sample — model memorizes 24 training points, expected ≈ 1.0). "
+            f"<b>LOO-CV Test R² = {_loo_r2:.4f}</b> — honest out-of-sample generalization. "
             f"Overfitting gap = {_gap:.4f}. "
-            f"{'Small gap — model generalises well.' if _gap < 0.15 else 'Gap indicates some overfitting; acceptable given only 24 data points.'} "
+            f"{'Small gap — model generalizes well.' if _gap < 0.15 else 'Gap indicates some overfitting; acceptable given only 24 data points.'} "
             f"R² close to 1.0 means the hour-of-day pattern explains most load variance."
         )
 
