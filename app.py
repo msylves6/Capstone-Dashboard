@@ -1354,8 +1354,8 @@ def chart_ai_reduction_pct(pred_df):
 
 def chart_model_comparison(score_df, title):
     f = go.Figure()
-    palette_a = [C["purple"], C["blue"], C["teal"]][:len(score_df)]
-    palette_b = [C["orchid"], C["gold"], C["orange"]][:len(score_df)]
+    palette_a = [C["blue"], C["teal"], C["indigo"]][:len(score_df)]
+    palette_b = [C["gold"], C["warn"], C["orange"]][:len(score_df)]
     f.add_trace(go.Bar(x=score_df["model"], y=score_df["test_mae"],  name="Test MAE",  marker_color=palette_a))
     f.add_trace(go.Bar(x=score_df["model"], y=score_df["test_rmse"], name="Test RMSE", marker_color=palette_b))
     f.update_layout(**base_layout(title), barmode="group")
