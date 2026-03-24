@@ -1387,20 +1387,33 @@ def chart_model_comparison(score_df, title):
     f = go.Figure()
     palette_a = [C["blue"], C["teal"], C["indigo"]][:len(score_df)]
     palette_b = [C["gold"], C["warn"], C["orange"]][:len(score_df)]
-    f.add_trace(go.Bar(x=score_df["model"], y=score_df["test_mae"],  name="Test MAE",  marker_color=palette_a))
-    f.add_trace(go.Bar(x=score_df["model"], y=score_df["test_rmse"], name="Test RMSE", marker_color=palette_b))
-    f.update_layout(**base_layout(title), barmode="group")
-    f.update_xaxes(title="Model"); f.update_yaxes(title="Error")
+    f.add_trace(go.Bar(x=score_df["model"], y=score_df["test_mae"],  name="LOO-CV MAE",  marker_color=palette_a))
+    f.add_trace(go.Bar(x=score_df["model"], y=score_df["test_rmse"], name="LOO-CV RMSE", marker_color=palette_b))
+    lay = base_layout(title, height=340)
+    lay["barmode"] = "group"
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.22,
+                         xanchor="center", x=0.5, font=dict(size=11),
+                         bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
+    lay["margin"] = dict(l=20, r=20, t=50, b=90)
+    f.update_layout(**lay)
+    f.update_xaxes(title="Model"); f.update_yaxes(title="Error (MW)")
     return f
 
 def chart_model_r2(score_df, title):
     f = go.Figure()
-    f.add_trace(go.Bar(x=score_df["model"], y=score_df["train_r2"], name="Train R²",
+    f.add_trace(go.Bar(x=score_df["model"], y=score_df["train_r2"], name="Train R² (in-sample)",
         marker_color=C["indigo"], opacity=0.75))
-    f.add_trace(go.Bar(x=score_df["model"], y=score_df["test_r2"],  name="Test R²",
+    f.add_trace(go.Bar(x=score_df["model"], y=score_df["test_r2"],  name="Test R² (LOO-CV)",
         marker_color=C["pink"], opacity=0.85))
-    f.update_layout(**base_layout(title), barmode="group")
-    f.update_xaxes(title="Model"); f.update_yaxes(title="R²")
+    lay = base_layout(title, height=340)
+    lay["barmode"] = "group"
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.22,
+                         xanchor="center", x=0.5, font=dict(size=11),
+                         bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
+    lay["margin"] = dict(l=20, r=20, t=50, b=90)
+    lay["yaxis"] = dict(title="R²", range=[0, 1.05])
+    f.update_layout(**lay)
+    f.update_xaxes(title="Model")
     return f
 
 def chart_ai_scenario_scores(summary_df):
