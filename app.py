@@ -19,7 +19,6 @@ from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from sklearn.model_selection import GroupShuffleSplit
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 
@@ -453,9 +452,9 @@ def base_layout(title: str, height: int = 320) -> Dict[str, Any]:
     return dict(
         title=f"<b>{title}</b>", template="plotly_white",
         paper_bgcolor="rgba(255,255,255,0)", plot_bgcolor="rgba(255,255,255,0)",
-        height=height, margin=dict(l=20, r=20, t=58, b=24),
+        height=height, margin=dict(l=20, r=20, t=58, b=30),
         font=dict(size=12, color=C["text"]),
-        legend=dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5, font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1),
+        legend=dict(orientation="h", yanchor="top", y=-0.42, xanchor="center", x=0.5, font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1),
     )
 
 def chart_load_profile(df: pd.DataFrame) -> go.Figure:
@@ -535,7 +534,7 @@ def chart_pv_bus_comparison(constz: pd.DataFrame) -> go.Figure:
     f.add_hline(y=2.0, line_dash="dot", line_color=C["warn"],
         annotation_text="2% target", annotation_font_size=10)
     lay = base_layout("Hourly % Reduction by PV Bus Location", height=320)
-    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.42, xanchor="center", x=0.5,
         font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
     f.update_layout(**lay)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1, 25, 2)))
@@ -556,7 +555,7 @@ def chart_pv_size_comparison(constz: pd.DataFrame) -> go.Figure:
     f.add_hline(y=2.0, line_dash="dot", line_color=C["warn"],
         annotation_text="2% target", annotation_font_size=10)
     lay = base_layout("Hourly % Reduction by PV Inverter Size", height=320)
-    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.42, xanchor="center", x=0.5,
         font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
     f.update_layout(**lay)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1, 25, 2)))
@@ -1289,7 +1288,7 @@ def _ieee_chart(title, bus4, bus4_label, bus9, bus9_label, bus14, bus14_label):
         showarrow=False, yanchor="bottom", yshift=4, font=dict(color=C["gold"], size=11))
     f.update_layout(template="plotly_white", paper_bgcolor="rgba(255,255,255,0)",
         plot_bgcolor="rgba(255,255,255,0)", height=360, showlegend=False,
-        margin=dict(l=20, r=120, t=55, b=100), font=dict(size=12, color=C["text"]),
+        margin=dict(l=20, r=120, t=55, b=120), font=dict(size=12, color=C["text"]),
         title=dict(text=f"<b>{title}</b>", x=0.5, xanchor="center",
                    font=dict(size=15, color=C["deep"])))
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1, 25, 2)))
@@ -1391,10 +1390,10 @@ def chart_model_comparison(score_df, title):
     f.add_trace(go.Bar(x=score_df["model"], y=score_df["test_rmse"], name="LOO-CV RMSE", marker_color=palette_b))
     lay = base_layout(title, height=340)
     lay["barmode"] = "group"
-    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.28,
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.42,
                          xanchor="center", x=0.5, font=dict(size=11),
                          bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
-    lay["margin"] = dict(l=20, r=20, t=52, b=105)
+    lay["margin"] = dict(l=20, r=20, t=52, b=125)
     f.update_layout(**lay)
     f.update_xaxes(title="Model"); f.update_yaxes(title="Error (MW)")
     return f
@@ -1407,10 +1406,10 @@ def chart_model_r2(score_df, title):
         marker_color=C["pink"], opacity=0.85))
     lay = base_layout(title, height=340)
     lay["barmode"] = "group"
-    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.28,
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.42,
                          xanchor="center", x=0.5, font=dict(size=11),
                          bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
-    lay["margin"] = dict(l=20, r=20, t=52, b=105)
+    lay["margin"] = dict(l=20, r=20, t=52, b=125)
     lay["yaxis"] = dict(title="R²", range=[0, 1.05])
     f.update_layout(**lay)
     f.update_xaxes(title="Model")
@@ -1453,7 +1452,7 @@ def chart_loadtype_comparison(pred_by_type):
             mode="lines", line=dict(color=color, width=2.8), showlegend=True))
     lay = _lt_layout("Next-Day Baseline Load by Load Type (No CVR)")
     lay["showlegend"] = True
-    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.42, xanchor="center", x=0.5,
         font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
     f.update_layout(**lay)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
@@ -1473,7 +1472,7 @@ def chart_loadtype_reduction(pred_by_type):
         annotation_font_size=10)
     lay = _lt_layout("Next-Day Predicted CVR % Reduction by Load Type")
     lay["showlegend"] = True
-    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.42, xanchor="center", x=0.5,
         font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
     f.update_layout(**lay)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
@@ -1510,7 +1509,7 @@ def chart_loadtype_voltage(pred_by_type):
         annotation_font_size=10)
     lay = _lt_layout("Predicted With-CVR Bus Voltage by Load Type")
     lay["showlegend"] = True
-    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+    lay["legend"] = dict(orientation="h", yanchor="top", y=-0.42, xanchor="center", x=0.5,
         font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
     f.update_layout(**lay)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
@@ -1672,10 +1671,10 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
                 annotation_text="2% target", annotation_font_size=9,
                 annotation_position="bottom right")
         lay = base_layout(title, height=h)
-        lay["legend"] = dict(orientation="h", yanchor="top", y=-0.28,
+        lay["legend"] = dict(orientation="h", yanchor="top", y=-0.42,
             xanchor="center", x=0.5, font=dict(size=10),
             bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
-        lay["margin"] = dict(l=20,r=20,t=52,b=105)
+        lay["margin"] = dict(l=20,r=20,t=52,b=125)
         f.update_layout(**lay)
         f.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,3)))
         f.update_yaxes(title="% Reduction")
@@ -1694,9 +1693,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
             mode="lines+markers", line=dict(color=C["purple"],width=3,dash="dash"),
             marker=dict(size=5), fill="tonexty", fillcolor="rgba(184,108,224,0.10)"))
         lay_a = base_layout("Feeder Load · With and Without CVR", height=320)
-        lay_a["legend"] = dict(orientation="h",yanchor="top",y=-0.28,xanchor="center",x=0.5,
+        lay_a["legend"] = dict(orientation="h",yanchor="top",y=-0.42,xanchor="center",x=0.5,
             font=dict(size=10),bgcolor="rgba(255,255,255,0.9)",bordercolor=C["border"],borderwidth=1)
-        lay_a["margin"] = dict(l=20,r=20,t=52,b=105)
+        lay_a["margin"] = dict(l=20,r=20,t=52,b=125)
         fa.update_layout(**lay_a)
         fa.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
         fa.update_yaxes(title="MW")
@@ -1713,9 +1712,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
         fv.add_hline(y=0.97,line_dash="dot",line_color=C["gold"],annotation_text="Target 0.97 pu",annotation_font_size=9)
         fv.add_hline(y=0.95,line_dash="dot",line_color=C["gold"],annotation_text="Min 0.95 pu",annotation_font_size=9)
         lay_v = base_layout("Load-Bus Voltage Compliance", height=320)
-        lay_v["legend"] = dict(orientation="h",yanchor="top",y=-0.28,xanchor="center",x=0.5,
+        lay_v["legend"] = dict(orientation="h",yanchor="top",y=-0.42,xanchor="center",x=0.5,
             font=dict(size=10),bgcolor="rgba(255,255,255,0.9)",bordercolor=C["border"],borderwidth=1)
-        lay_v["margin"] = dict(l=20,r=20,t=52,b=105)
+        lay_v["margin"] = dict(l=20,r=20,t=52,b=125)
         lay_v["yaxis"] = dict(title="Voltage (pu)", range=[0.93,1.08])
         fv.update_layout(**lay_v)
         fv.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
@@ -1746,9 +1745,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
         _lay_bus = base_layout("Daily Avg by PV Bus",height=360)
         _lay_bus["barmode"] = "group"
         _lay_bus["yaxis"] = dict(title="Avg % Reduction",range=[0,max([_b3a,_b4a,_b5a])*1.4])
-        _lay_bus["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+        _lay_bus["legend"] = dict(orientation="h", yanchor="top", y=-0.42, xanchor="center", x=0.5,
             font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
-        _lay_bus["margin"] = dict(l=20,r=20,t=52,b=105)
+        _lay_bus["margin"] = dict(l=20,r=20,t=52,b=125)
         _fb_bus.update_layout(**_lay_bus)
         show_chart(_fb_bus)
 
@@ -1771,9 +1770,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
         _lay_sz = base_layout("Daily Avg by PV Size",height=360)
         _lay_sz["barmode"] = "group"
         _lay_sz["yaxis"] = dict(title="Avg % Reduction",range=[0,max([_s_a,_l_a])*1.4])
-        _lay_sz["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+        _lay_sz["legend"] = dict(orientation="h", yanchor="top", y=-0.42, xanchor="center", x=0.5,
             font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
-        _lay_sz["margin"] = dict(l=20,r=20,t=52,b=105)
+        _lay_sz["margin"] = dict(l=20,r=20,t=52,b=125)
         _fb_sz.update_layout(**_lay_sz)
         show_chart(_fb_sz)
 
@@ -1800,9 +1799,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
         _lay_pf = base_layout("Daily Avg by Power Factor",height=360)
         _lay_pf["barmode"] = "group"
         _lay_pf["yaxis"] = dict(title="Avg % Reduction",range=[0,max(_pf_avgs)*1.4])
-        _lay_pf["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+        _lay_pf["legend"] = dict(orientation="h", yanchor="top", y=-0.42, xanchor="center", x=0.5,
             font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
-        _lay_pf["margin"] = dict(l=20,r=20,t=52,b=105)
+        _lay_pf["margin"] = dict(l=20,r=20,t=52,b=125)
         _fpf.update_layout(**_lay_pf)
         show_chart(_fpf)
 
@@ -1815,8 +1814,8 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
                 line=dict(color=_cl,width=2.5),showlegend=True))
         _f_sun_dx.add_hline(y=2.0,line_dash="dot",line_color=C["warn"],annotation_text="2% target",annotation_font_size=9,annotation_position="bottom right")
         _lay_sdx = base_layout("Hourly % Reduction by Sun Condition",height=320)
-        _lay_sdx["legend"]=dict(orientation="h",yanchor="top",y=-0.28,xanchor="center",x=0.5,font=dict(size=10),bgcolor="rgba(255,255,255,0.9)",bordercolor=C["border"],borderwidth=1)
-        _lay_sdx["margin"]=dict(l=20,r=20,t=52,b=105)
+        _lay_sdx["legend"]=dict(orientation="h",yanchor="top",y=-0.42,xanchor="center",x=0.5,font=dict(size=10),bgcolor="rgba(255,255,255,0.9)",bordercolor=C["border"],borderwidth=1)
+        _lay_sdx["margin"]=dict(l=20,r=20,t=52,b=125)
         _f_sun_dx.update_layout(**_lay_sdx)
         _f_sun_dx.update_xaxes(title="Hour of Day",tickvals=list(range(1,25,3)))
         _f_sun_dx.update_yaxes(title="% Reduction")
@@ -1835,9 +1834,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
         _lay_sun = base_layout("Daily Avg by Sun Condition",height=360)
         _lay_sun["barmode"] = "group"
         _lay_sun["yaxis"] = dict(title="Avg % Reduction",range=[0,max(_sun_avgs)*1.4])
-        _lay_sun["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+        _lay_sun["legend"] = dict(orientation="h", yanchor="top", y=-0.42, xanchor="center", x=0.5,
             font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
-        _lay_sun["margin"] = dict(l=20,r=20,t=52,b=105)
+        _lay_sun["margin"] = dict(l=20,r=20,t=52,b=125)
         _fsun.update_layout(**_lay_sun)
         show_chart(_fsun)
 
@@ -1866,9 +1865,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
         lay_lt = base_layout("Daily Average by Load Type", height=360)
         lay_lt["barmode"] = "group"
         lay_lt["yaxis"] = dict(title="Avg % Reduction", range=[0, max(lt_avgs)*1.4])
-        lay_lt["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+        lay_lt["legend"] = dict(orientation="h", yanchor="top", y=-0.42, xanchor="center", x=0.5,
             font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
-        lay_lt["margin"] = dict(l=20,r=20,t=52,b=105)
+        lay_lt["margin"] = dict(l=20,r=20,t=52,b=125)
         fl.update_layout(**lay_lt)
         show_chart(fl)
 
@@ -1896,9 +1895,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
             showarrow=False, bgcolor="rgba(255,255,255,0.8)",
             bordercolor=C["deep"], borderwidth=1, font=dict(size=11,color=C["text"]))
         lay_bw = base_layout("Most vs Least Effective Conditions for CVR in ZIP Mixture Load Types", height=360)
-        lay_bw["legend"] = dict(orientation="h",yanchor="top",y=-0.28,xanchor="center",x=0.5,
+        lay_bw["legend"] = dict(orientation="h",yanchor="top",y=-0.42,xanchor="center",x=0.5,
             font=dict(size=9),bgcolor="rgba(255,255,255,0.9)",bordercolor=C["border"],borderwidth=1)
-        lay_bw["margin"] = dict(l=20,r=20,t=52,b=105)
+        lay_bw["margin"] = dict(l=20,r=20,t=52,b=125)
         lay_bw["yaxis"] = dict(title="% Reduction", range=[0, 5.5])
         fb.update_layout(**lay_bw)
         fb.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,3)))
@@ -1988,9 +1987,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
             line=dict(color=C["deep"], width=2, dash="dot")), secondary_y=True)
         _lay_cf = base_layout("Hourly Cost Savings by Load Type", height=370)
         _lay_cf["barmode"] = "group"
-        _lay_cf["legend"] = dict(orientation="h",yanchor="top",y=-0.28,xanchor="center",x=0.5,
+        _lay_cf["legend"] = dict(orientation="h",yanchor="top",y=-0.42,xanchor="center",x=0.5,
             font=dict(size=9),bgcolor="rgba(255,255,255,0.9)",bordercolor=C["border"],borderwidth=1)
-        _lay_cf["margin"] = dict(l=20,r=20,t=52,b=105)
+        _lay_cf["margin"] = dict(l=20,r=20,t=52,b=125)
         _fc.update_layout(**_lay_cf)
         _fc.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
         _fc.update_yaxes(title="$/hr Saved", secondary_y=False)
@@ -2011,9 +2010,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
         _lay_fb = base_layout("Daily Cost Savings by Load Type (10 MW Peak)", height=360)
         _lay_fb["barmode"] = "group"
         _lay_fb["yaxis"] = dict(title="Daily $ Saved", range=[0, max(_dx_daily_all)*1.4])
-        _lay_fb["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+        _lay_fb["legend"] = dict(orientation="h", yanchor="top", y=-0.42, xanchor="center", x=0.5,
             font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
-        _lay_fb["margin"] = dict(l=20,r=20,t=52,b=105)
+        _lay_fb["margin"] = dict(l=20,r=20,t=52,b=125)
         _fb_cost.update_layout(**_lay_fb)
         show_chart(_fb_cost)
         analysis_box(
@@ -2035,9 +2034,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
         _lay_ann = base_layout("Annual Cost Savings by Load Type (×365)", height=360)
         _lay_ann["barmode"] = "group"
         _lay_ann["yaxis"] = dict(title="Annual $ Saved", range=[0, max(_dx_annual_all)*1.4])
-        _lay_ann["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+        _lay_ann["legend"] = dict(orientation="h", yanchor="top", y=-0.42, xanchor="center", x=0.5,
             font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
-        _lay_ann["margin"] = dict(l=20,r=20,t=52,b=105)
+        _lay_ann["margin"] = dict(l=20,r=20,t=52,b=125)
         _fa_ann.update_layout(**_lay_ann)
         show_chart(_fa_ann)
         analysis_box(
@@ -2071,9 +2070,9 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
             _fc4.add_vrect(x0=_hs-0.5, x1=_he+0.5,
                 fillcolor="rgba(230,57,70,0.07)", line_width=0)
         _lay_c4 = base_layout("Cumulative Daily Savings ($)", height=340)
-        _lay_c4["legend"] = dict(orientation="h",yanchor="top",y=-0.28,xanchor="center",x=0.5,
+        _lay_c4["legend"] = dict(orientation="h",yanchor="top",y=-0.42,xanchor="center",x=0.5,
             font=dict(size=10),bgcolor="rgba(255,255,255,0.9)",bordercolor=C["border"],borderwidth=1)
-        _lay_c4["margin"] = dict(l=20,r=20,t=52,b=105)
+        _lay_c4["margin"] = dict(l=20,r=20,t=52,b=125)
         _fc4.update_layout(**_lay_c4)
         _fc4.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
         _fc4.update_yaxes(title="Cumulative $ Saved")
@@ -2149,9 +2148,9 @@ def page_ieee_results(ieee):
         _lay1 = base_layout("Avg % Reduction — Scenario 1",height=360)
         _lay1["barmode"] = "group"
         _lay1["yaxis"] = dict(title="Avg % Reduction",range=[0,5.5])
-        _lay1["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+        _lay1["legend"] = dict(orientation="h", yanchor="top", y=-0.42, xanchor="center", x=0.5,
             font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
-        _lay1["margin"] = dict(l=20,r=20,t=52,b=105)
+        _lay1["margin"] = dict(l=20,r=20,t=52,b=125)
         _fs1.update_layout(**_lay1)
         show_chart(_fs1)
     analysis_box("""
@@ -2177,9 +2176,9 @@ def page_ieee_results(ieee):
         _lay2 = base_layout("Avg % Reduction — Scenario 2",height=360)
         _lay2["barmode"] = "group"
         _lay2["yaxis"] = dict(title="Avg % Reduction",range=[0,6.5])
-        _lay2["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+        _lay2["legend"] = dict(orientation="h", yanchor="top", y=-0.42, xanchor="center", x=0.5,
             font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
-        _lay2["margin"] = dict(l=20,r=20,t=52,b=105)
+        _lay2["margin"] = dict(l=20,r=20,t=52,b=125)
         _fs2.update_layout(**_lay2)
         show_chart(_fs2)
     analysis_box("""
@@ -2204,9 +2203,9 @@ def page_ieee_results(ieee):
         _lay3 = base_layout("Avg % Reduction — Scenario 3",height=360)
         _lay3["barmode"] = "group"
         _lay3["yaxis"] = dict(title="Avg % Reduction",range=[0,5.5])
-        _lay3["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+        _lay3["legend"] = dict(orientation="h", yanchor="top", y=-0.42, xanchor="center", x=0.5,
             font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
-        _lay3["margin"] = dict(l=20,r=20,t=52,b=105)
+        _lay3["margin"] = dict(l=20,r=20,t=52,b=125)
         _fs3.update_layout(**_lay3)
         show_chart(_fs3)
     analysis_box("""
@@ -2314,9 +2313,9 @@ def page_ieee_results(ieee):
             line=dict(color=C["deep"],width=2,dash="dot")), secondary_y=True)
         _lay_ic = base_layout("Hourly Cost Savings by Bus (Best Scenario)", height=340)
         _lay_ic["barmode"] = "stack"
-        _lay_ic["legend"] = dict(orientation="h",yanchor="top",y=-0.28,xanchor="center",x=0.5,
+        _lay_ic["legend"] = dict(orientation="h",yanchor="top",y=-0.42,xanchor="center",x=0.5,
             font=dict(size=10),bgcolor="rgba(255,255,255,0.9)",bordercolor=C["border"],borderwidth=1)
-        _lay_ic["margin"] = dict(l=20,r=20,t=52,b=105)
+        _lay_ic["margin"] = dict(l=20,r=20,t=52,b=125)
         _fic2.update_layout(**_lay_ic)
         _fic2.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
         _fic2.update_yaxes(title="$/hr Saved (stacked)", secondary_y=False)
@@ -2341,9 +2340,9 @@ def page_ieee_results(ieee):
         _lay_id["barmode"] = "group"
         _lay_id["yaxis"] = dict(title="Daily $ Saved",
             range=[0, max(_ieee_daily.values())*1.4])
-        _lay_id["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+        _lay_id["legend"] = dict(orientation="h", yanchor="top", y=-0.42, xanchor="center", x=0.5,
             font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
-        _lay_id["margin"] = dict(l=20,r=20,t=52,b=105)
+        _lay_id["margin"] = dict(l=20,r=20,t=52,b=125)
         _fid.update_layout(**_lay_id)
         show_chart(_fid)
         analysis_box(
@@ -2370,7 +2369,7 @@ def chart_loadtype_comparison(pred_by_type: dict) -> go.Figure:
     layout = base_layout("Next-Day Baseline Load by Load Type (No CVR)", height=320)
     layout["title"] = dict(text=f"<b>Next-Day Baseline Load by Load Type (No CVR)</b>",
         x=0.5, xanchor="center", font=dict(size=13, color=C["deep"]))
-    layout["margin"] = dict(l=20, r=100, t=52, b=100)
+    layout["margin"] = dict(l=20, r=100, t=52, b=120)
     f.update_layout(**layout)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1, 25, 2)))
     f.update_yaxes(title="MW")
@@ -2392,7 +2391,7 @@ def chart_loadtype_reduction(pred_by_type: dict) -> go.Figure:
     layout = base_layout("Next-Day Predicted CVR % Reduction by Load Type", height=320)
     layout["title"] = dict(text=f"<b>Next-Day Predicted CVR % Reduction by Load Type</b>",
         x=0.5, xanchor="center", font=dict(size=13, color=C["deep"]))
-    layout["margin"] = dict(l=20, r=100, t=52, b=100)
+    layout["margin"] = dict(l=20, r=100, t=52, b=120)
     f.update_layout(**layout)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1, 25, 2)))
     f.update_yaxes(title="% Reduction")
@@ -2432,7 +2431,7 @@ def chart_loadtype_voltage(pred_by_type: dict) -> go.Figure:
     layout = base_layout("Predicted With-CVR Bus Voltage by Load Type", height=320)
     layout["title"] = dict(text=f"<b>Predicted With-CVR Bus Voltage by Load Type</b>",
         x=0.5, xanchor="center", font=dict(size=13, color=C["deep"]))
-    layout["margin"] = dict(l=20, r=100, t=52, b=100)
+    layout["margin"] = dict(l=20, r=100, t=52, b=120)
     f.update_layout(**layout)
     f.update_xaxes(title="Hour of Day", tickvals=list(range(1, 25, 2)))
     f.update_yaxes(title="Voltage (pu)")
@@ -3036,73 +3035,114 @@ def page_ai(constz_raw, consti_raw, zip_raw):
 
     # ── WEATHER + AUTO-BEST ───────────────────────────────────────────────────
     # ── AI DESIGN DECISIONS ──────────────────────────────────────────────────
-    section_heading("AI Model Design Decisions",
-        "Why we chose this approach, what alternatives were considered, and what was ruled out.")
+    section_heading("How the AI Section Works",
+        "A plain-language explanation of what the AI does, how it works, and why we built it this way.")
 
-    with st.expander("Why a Surrogate Model?", expanded=False):
-        st.markdown("""
-**What it is:** A surrogate model is a fast ML approximation trained on expensive simulation outputs.
-Each PSSE run takes seconds to minutes; with 5,184 cases × 24 hours = 124,416 data points, training
-offline allows instant dashboard predictions without re-running PSSE.
+    panel("What Does the AI Section Actually Do?", """
+    <p>The AI section answers one practical question: <b>"Given tomorrow's weather in London, Ontario —
+    which PV inverter configuration will save the most energy?"</b></p>
 
-**Ruled out — Direct simulation:** Requires a PSSE licence, Windows Python environment, and 30+ seconds
-per prediction. Not viable for an interactive web dashboard.
-        """)
+    <p>It does this in three steps:</p>
 
-    with st.expander("Why Random Forest + Extra Trees Ensemble?", expanded=False):
-        st.markdown("""
-**Chosen:** Blended ensemble — Extra Trees (60%) + Random Forest (40%).
+    <p><b>Step 1 — Get tomorrow's weather.</b>
+    The dashboard fetches a live hourly forecast for London, Ontario from the Open-Meteo API
+    (temperature, cloud cover, wind, precipitation). This is used to estimate how much electricity
+    the feeder will consume hour by hour — because hot days mean more air conditioning, and cloudy
+    days affect how much reactive power the solar inverter has available.</p>
 
-**Why:** Both handle mixed categorical/numerical features natively (load type, sun rating, PF).
-Extra Trees randomizes split thresholds more aggressively, reducing variance. The 60/40 blend was
-tuned empirically — ET outperformed RF on the noisier delta-load target.
+    <p><b>Step 2 — Predict the load shape.</b>
+    A machine learning model (trained on the 5,184 PSSE simulation cases) uses the weather forecast
+    to predict the feeder's hourly load in MW — the "baseline" before CVR is applied.
+    This is the only part the ML model predicts.</p>
 
-**Ruled out — Neural Networks:** Require far more data to generalize reliably and are less interpretable
-for an engineering audience. With 124K rows they tend to overfit.
+    <p><b>Step 3 — Apply the real CVR reduction.</b>
+    The actual CVR savings (how many MW are reduced by lowering voltage) come directly from the PSSE
+    simulation results — not from the ML model. The AI looks up the exact simulation result for the
+    selected configuration (power factor, PV bus, inverter size, sun condition) and applies it to
+    tomorrow's predicted load. Cost savings are then calculated using Ontario TOU electricity rates.</p>
+    """)
 
-**Ruled out — Linear Regression:** CVR response is nonlinear (P ∝ V²). Cannot capture
-load-type-dependent voltage responses.
+    panel("Why Is the AI Split Into Two Parts — ML + Simulation Data?", """
+    <p>This is the most important design decision, and it makes the forecasting reliable.</p>
 
-**Ruled out — Gradient Boosting (XGBoost/LightGBM):** Would perform similarly but requires more
-careful hyperparameter tuning. RF + ET is sufficient and simpler.
-        """)
+    <p>An earlier version tried to have the ML model predict CVR savings directly from weather and
+    configuration features. It failed — the model consistently over-predicted savings (~7.89%
+    instead of the real ~2.94% average) because it was pattern-matching on training data rather than
+    understanding the physics.</p>
 
-    with st.expander("Why Physics-Based Delta, Not ML-Predicted Delta?", expanded=False):
-        st.markdown("""
-**The problem:** Early versions predicted CVR MW savings (delta) directly from features. The model
-consistently overpredicted (~7.89% instead of the study average of ~2.94%), because RF extrapolated
-toward high-delta training cases.
+    <p>The key insight is: <b>weather and CVR savings are separate things.</b></p>
+    <p>
+    • <b>Weather changes every day</b> — it shifts how much load is on the feeder at each hour.<br>
+    • <b>CVR reduction % does not change with weather</b> — it is a fixed physical result determined
+    entirely by the power factor, PV bus location, inverter size, and cloud/sun condition.
+    For a given configuration, the voltage drop and resulting load reduction are the same
+    whether it is a hot day or a cold day.
+    </p>
 
-**The fix:** Baseline load shape (MW without CVR) is predicted by ML from weather features. The CVR
-delta is taken directly from the PSSE study data — the actual simulation result for that case.
+    <p>So the correct split is: <b>ML predicts the load shape (weather-dependent).
+    PSSE data provides the CVR reduction % (weather-independent).</b>
+    Combining them gives an honest, physics-grounded prediction with no over-estimation.</p>
+    """)
 
-**Why this works:** The reduction % for a given (load type, PF, PV bus, PV size, sun rating) is a fixed
-physical result that doesn't change with weather. Weather only shifts the load shape.
+    panel("Why Random Forest + Extra Trees? Why Not a Neural Network?", """
+    <p>The ML model uses a blended ensemble of two tree-based algorithms:
+    <b>Random Forest (40%)</b> and <b>Extra Trees (60%)</b>.</p>
 
-**Result:** Predictions now match study averages — ~7.96% for Constant-Z at PF 0.98, Bus 5; ~4.06% for
-Constant-I; ~4.28% for ZIP-Residential.
-        """)
+    <p><b>Why tree-based models?</b> The load shape is driven by time of day — a repeating 24-hour
+    pattern. Tree-based models learn this pattern naturally from the hour-of-day features (encoded as
+    sine and cosine to capture the circular nature of time). They handle the small dataset
+    (24 hourly training points) well and do not require large amounts of data.</p>
 
-    with st.expander("Why Weather from Open-Meteo?", expanded=False):
-        st.markdown("""
-**Chosen:** Open-Meteo API — free, no API key needed, London ON coordinates, hourly resolution.
-Temperature drives heating/cooling load shape; cloud cover affects PV output assessment.
+    <p><b>Why not a neural network?</b> Neural networks need much more data to train reliably.
+    With only 24 training points (one per hour), a neural network would severely overfit —
+    memorizing the training data without learning anything generalizable. Tree ensembles
+    are far more reliable at this scale.</p>
 
-**Ruled out — Static load shape:** No weather adjustment would give the same prediction every day.
+    <p><b>Why not linear regression?</b> The load curve is not linear — it rises sharply in the
+    morning, peaks in the evening, and drops overnight. A straight line cannot capture this shape.
+    Tree models handle non-linear patterns naturally.</p>
 
-**Ruled out — ECCC (Environment Canada):** Requires API registration, less flexible for hourly
-programmatic access.
-        """)
+    <p><b>Why blend RF and ET?</b> Extra Trees introduces more randomness in how it builds each tree,
+    which reduces the risk of over-fitting to any single quirk in the data.
+    Blending both gives slightly better results than either model alone.</p>
+    """)
 
-    with st.expander("Why Group-Aware Train/Test Split?", expanded=False):
-        st.markdown("""
-**The problem:** Standard random splits would leak information — if 23 of 24 hours of a case land in
-training, the model memorizes it and performs artificially well on the remaining test hour.
+    panel("How Do We Know the Model Is Not Cheating? (No Data Leakage)", """
+    <p>Data leakage means the model sees the answer during training — making it look accurate
+    when it is actually just memorizing. We eliminated this using
+    <b>Leave-One-Hour-Out Cross-Validation (LOO-CV)</b>.</p>
 
-**The fix:** GroupShuffleSplit ensures all 24 hours of a case are entirely in training or entirely in
-test. Without this, test R² appeared near 1.0 (data leakage). With it, metrics reflect true
-out-of-sample generalization.
-        """)
+    <p>Here is exactly how it works:</p>
+    <p>
+    1. Remove Hour 1 from the training data. Train the model on Hours 2–24. Predict Hour 1.<br>
+    2. Remove Hour 2. Train on Hours 1 and 3–24. Predict Hour 2.<br>
+    3. Repeat for every hour until all 24 have been predicted by a model that never saw them.<br>
+    4. Compare all 24 predictions against the true values to compute MAE, RMSE, and R².
+    </p>
+
+    <p>This guarantees the model was <b>never trained on the hour it is being tested on</b>.
+    The resulting metrics are honest out-of-sample performance — not inflated by memorization.</p>
+
+    <p><b>Results:</b> LOO-CV R² = 0.94, MAE = 0.15 MW (1.5% of 10 MW peak).
+    The train R² is ~0.995 (expected — the model memorizes 24 points it has seen).
+    The overfitting gap of 0.06 is small and acceptable given the tiny dataset size.</p>
+    """)
+
+    panel("Why Use Live Weather Instead of a Fixed Load Curve?", """
+    <p>Ontario electricity demand is weather-driven. A hot summer afternoon raises demand
+    by 15–20% compared to a mild evening. A cold winter morning pulls it just as high.
+    Using a fixed average load curve would give the same prediction every day, regardless
+    of actual conditions.</p>
+
+    <p>By pulling a live hourly forecast from <b>Open-Meteo</b> (free, no login required,
+    London Ontario coordinates), the dashboard adjusts the predicted load shape for
+    tomorrow's actual temperature, cloud cover, and precipitation.
+    This makes the cost savings estimate realistic for the specific day, not just a yearly average.</p>
+
+    <p>Cloud cover also directly affects the CVR strategy: on a cloudy day the PV inverter
+    produces little active power, freeing up its full reactive power capacity for voltage control.
+    This is why cloudy conditions consistently produce the highest CVR reductions in the study data.</p>
+    """)
 
     section_heading("Tomorrow's Weather Forecast",
         "Live forecast from Open-Meteo API for London, Ontario — used by the AI to adjust the load shape.")
@@ -3230,7 +3270,7 @@ out-of-sample generalization.
                 textposition="outside", textfont=dict(size=9)
             ))
             _fi_lay = base_layout("Feature Importances — Random Forest (Load Shape Model)", height=320)
-            _fi_lay["margin"] = dict(l=20, r=20, t=52, b=105)
+            _fi_lay["margin"] = dict(l=20, r=20, t=52, b=125)
             _fi_lay["yaxis"] = {"title": "Importance", "range": [0, float(_feat_df["Importance"].max())*1.3]}
             _fi_fig.update_layout(**_fi_lay)
             _fi_fig.update_xaxes(title="Feature")
@@ -3242,6 +3282,189 @@ out-of-sample generalization.
                 "Hour cyclical features (sin/cos) dominate — the load shape is primarily driven by time of day. "
                 "Weather features provide secondary adjustment at inference."
             )
+
+    # ── AI GLOSSARY ───────────────────────────────────────────────────────────
+    section_heading("Glossary — AI & Model Terms",
+        "Plain-language definitions of every technical term used in this section.")
+
+    gl1, gl2 = st.columns(2)
+    with gl1:
+        st.markdown(f"""
+        <div class="term-box">
+            <b>MAE (Mean Absolute Error)</b>
+            <p>On average, how far off is each prediction? MAE adds up all the prediction errors
+            (ignoring whether too high or too low) and divides by the number of predictions.
+            <br><br><em>Example: MAE = 0.15 MW means the model's hourly load predictions are
+            wrong by 0.15 MW on average. At a 10 MW feeder, that is a 1.5% error — very accurate.</em></p>
+        </div>
+        <div class="term-box">
+            <b>RMSE (Root Mean Square Error)</b>
+            <p>Similar to MAE but squares each error before averaging, then takes the square root.
+            This means large errors are penalized more heavily than small ones.
+            RMSE is always ≥ MAE — a big gap between them means the model occasionally makes
+            large individual mistakes.
+            <br><br><em>Example: RMSE = 0.22 MW vs MAE = 0.15 MW — most errors are small
+            but a few hours (like the morning ramp) have larger misses.</em></p>
+        </div>
+        <div class="term-box">
+            <b>R² (R-squared / Coefficient of Determination)</b>
+            <p>How much of the pattern does the model actually explain? Goes from 0 to 1.
+            <br>• R² = 1.0 → perfect predictions every hour
+            <br>• R² = 0.94 → model explains 94% of the load variation
+            <br>• R² = 0.0 → model is no better than always predicting the average
+            <br><br><em>R² = 0.94 means the model captures 94% of the rises and falls in the
+            daily load curve using hour-of-day and weather features.</em></p>
+        </div>
+        <div class="term-box">
+            <b>Train R² vs Test R²</b>
+            <p>Train R² is measured on data the model has already seen — it will always look
+            good because the model has memorized it. Test R² is measured on data the model
+            has never seen — this is the honest score.
+            <br><br><em>Train R² ≈ 1.0 is expected and not impressive. Test R² = 0.94 is
+            the meaningful number.</em></p>
+        </div>
+        """, unsafe_allow_html=True)
+    with gl2:
+        st.markdown(f"""
+        <div class="term-box">
+            <b>LOO-CV (Leave-One-Out Cross-Validation)</b>
+            <p>A method to get an honest test score when you have very little data.
+            For each of the 24 hours, the model is re-trained on the other 23 hours,
+            then tested on the one it has never seen. This is repeated 24 times.
+            The result is a completely leak-free performance estimate.
+            <br><br><em>LOO-CV is used here because the load shape only has 24 data points —
+            not enough for a traditional train/test split.</em></p>
+        </div>
+        <div class="term-box">
+            <b>Data Leakage</b>
+            <p>When the model accidentally sees information during training that it would not
+            have access to in real use — making it look more accurate than it really is.
+            A common example is testing the model on data it was already trained on.
+            LOO-CV eliminates this by ensuring no test hour is ever in the training set.
+            <br><br><em>Without LOO-CV, test R² appeared near 1.0 — a sign of leakage,
+            not a sign of a good model.</em></p>
+        </div>
+        <div class="term-box">
+            <b>Overfitting</b>
+            <p>When a model memorizes its training data so well that it performs poorly on
+            new data it has never seen. The "overfitting gap" is Train R² minus Test R².
+            A small gap (under 0.10) means the model generalizes well.
+            A large gap means it has memorized the training set.
+            <br><br><em>Gap = 0.06 here — small and acceptable for a 24-point dataset.</em></p>
+        </div>
+        <div class="term-box">
+            <b>Surrogate Model</b>
+            <p>A fast machine learning approximation trained on the results of slow, expensive
+            simulations. Instead of running PSSE every time a user changes a slider (which takes
+            minutes), the surrogate model gives an instant answer trained on all 5,184 cases.
+            <br><br><em>Think of it as a lookup table that can interpolate — it knows all the
+            simulation results and can estimate outcomes for intermediate conditions.</em></p>
+        </div>
+        """, unsafe_allow_html=True)
+
+
+
+    # ── GLOSSARY ─────────────────────────────────────────────────────────────
+    section_heading("AI & Statistics Glossary",
+        "Plain-language definitions of every technical term used in this section.")
+
+    g_col1, g_col2 = st.columns(2)
+
+    with g_col1:
+        st.markdown(f"""
+        <div class="term-box">
+            <b>R² (R-squared)</b>
+            <p>Measures how well the model explains the pattern in the data.
+            Goes from 0 to 1. An R² of <b>1.0</b> means perfect predictions — the model tracks
+            every rise and fall exactly. An R² of <b>0</b> means the model is no better than
+            always guessing the average. The dashboard's LOO-CV R² of <b>0.94</b> means
+            94% of the variation in hourly load is explained by the model.</p>
+        </div>
+        <div class="term-box">
+            <b>MAE — Mean Absolute Error</b>
+            <p>The average size of a prediction mistake, in real units (MW).
+            For each hour, find how far off the prediction was (ignoring whether it was too high or
+            too low), then average all 24 of those errors. An MAE of <b>0.15 MW</b> means
+            the model is typically off by 0.15 MW per hour — about 1.5% of a 10 MW feeder.
+            Lower is better.</p>
+        </div>
+        <div class="term-box">
+            <b>RMSE — Root Mean Square Error</b>
+            <p>Like MAE, but it penalizes large mistakes more heavily. If the model is mostly
+            accurate but occasionally very wrong, RMSE will be much larger than MAE.
+            RMSE of <b>0.22 MW</b> vs MAE of 0.15 MW shows the model has a few hours where
+            it is more off than average — but the gap is small, indicating consistent performance.</p>
+        </div>
+        <div class="term-box">
+            <b>Overfitting</b>
+            <p>When a model memorizes the training data instead of learning the underlying pattern.
+            An overfitted model looks very accurate during training but fails on new, unseen data.
+            Signs of overfitting: Train R² ≈ 1.0 while Test R² is much lower.
+            The dashboard's gap of 0.06 is small — the model generalizes well.</p>
+        </div>
+        <div class="term-box">
+            <b>Data Leakage</b>
+            <p>When a model secretly "sees the answer" during training, making its accuracy
+            look better than it really is. Example: training on Hours 1–23 and testing on Hour 24
+            is fair. But if Hour 24 was accidentally included in training, the test result is
+            meaningless. The dashboard uses LOO-CV to guarantee this never happens.</p>
+        </div>
+        <div class="term-box">
+            <b>Training Data</b>
+            <p>The data the model learns from. In this dashboard, the training data is
+            the 5,184 PSSE simulation results — 216 configurations × 24 hours each.
+            The model studies these results to learn the relationship between hour-of-day,
+            weather, and feeder load.</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    with g_col2:
+        st.markdown(f"""
+        <div class="term-box">
+            <b>LOO-CV — Leave-One-Hour-Out Cross-Validation</b>
+            <p>A method for honestly measuring model accuracy without data leakage.
+            For each of the 24 hours: remove that hour from training, train a fresh model
+            on the other 23, predict the removed hour. Repeat for all 24 hours.
+            The final metrics are computed from these 24 held-out predictions —
+            every hour was predicted by a model that had never seen it.</p>
+        </div>
+        <div class="term-box">
+            <b>Train R² vs Test R² (LOO-CV)</b>
+            <p><b>Train R²</b> measures accuracy on data the model was trained on — expected to be
+            near 1.0 because the model memorizes what it has seen. This number is not meaningful
+            on its own. <b>Test R² (LOO-CV)</b> measures accuracy on data the model has never seen —
+            this is the honest, real-world performance metric. Always use Test R² to judge
+            how good a model actually is.</p>
+        </div>
+        <div class="term-box">
+            <b>Surrogate Model</b>
+            <p>A fast ML approximation that mimics the output of an expensive simulation.
+            Running a PSSE power flow takes seconds per case; 5,184 cases would take hours.
+            A surrogate model is trained once on all those results, then gives instant
+            predictions without needing to run PSSE again.</p>
+        </div>
+        <div class="term-box">
+            <b>Random Forest</b>
+            <p>A machine learning algorithm that builds many decision trees and averages their
+            predictions. Each tree learns slightly different patterns from the data.
+            Averaging many trees gives more reliable, stable predictions than any single tree alone.
+            Works well with small datasets and non-linear patterns like daily load curves.</p>
+        </div>
+        <div class="term-box">
+            <b>Extra Trees (Extremely Randomized Trees)</b>
+            <p>Similar to Random Forest but adds extra randomness when building each tree —
+            it picks split points randomly rather than finding the optimal one.
+            This extra randomness reduces the risk of memorizing the training data (overfitting),
+            at a small cost to in-sample accuracy. Combined with Random Forest in a 60/40 blend.</p>
+        </div>
+        <div class="term-box">
+            <b>Ensemble / Blended Model</b>
+            <p>A model that combines the predictions of two or more individual models.
+            The dashboard blends Random Forest (40%) and Extra Trees (60%).
+            Blending improves accuracy and stability — the weaknesses of one model
+            are often covered by the strengths of the other.</p>
+        </div>
+    """, unsafe_allow_html=True)
 
 
 def page_prototype():
@@ -3525,14 +3748,14 @@ def page_excel_data():
         _accent = accent or C["purple"]
         st.markdown(f"""
         <div class="file-link-card" style="margin-bottom:0.55rem;padding:0.9rem 1.2rem;
-            border-left:3px solid {_accent};">
+            border-left:4px solid {_accent};background:rgba(255,255,255,0.97);">
             <span style="font-size:1.5rem;flex-shrink:0;">{icon}</span>
             <div style="flex:1;">
                 <a href="{href}" download="{filename}" target="_blank"
-                   style="font-size:1rem;color:{_accent};">{title}</a>
+                   style="font-size:1rem;color:{_accent};font-weight:700;">{title}</a>
                 <div style="margin-top:0.12rem;">
-                    <code style="font-size:0.72rem;background:#f4f0fb;padding:1px 6px;
-                        border-radius:4px;color:{_accent};">{filename}</code>
+                    <code style="font-size:0.72rem;background:#f4f0fb;padding:2px 7px;
+                        border-radius:4px;color:{_accent};font-weight:600;">{filename}</code>
                 </div>
                 <div class="file-link-desc" style="margin-top:0.35rem;line-height:1.5;">{desc}</div>
             </div>
@@ -3544,7 +3767,7 @@ def page_excel_data():
     PDF_MIME  = "application/pdf"
 
     # ── Excel / Data files ────────────────────────────────────────
-    st.markdown(f'''<h3 style="border-left:4px solid #b86ce0;padding-left:10px;">📊 Excel Data Files</h3>''', unsafe_allow_html=True)
+    st.markdown(f'<h3 style="border-left:4px solid {C["purple"]};padding-left:10px;color:{C["purple"]}">📊 Excel Data Files</h3>', unsafe_allow_html=True)
     excel_files = [
         ("AllResults.xlsx",                          "All Results — Pivot Tables",
          "Complete pivot table analysis of all 5,184 Dx feeder simulation cases: "
@@ -3573,7 +3796,7 @@ def page_excel_data():
         _render_file(fname, title, desc, "📊", XLSX_MIME, accent=C["purple"])
 
     # ── Simulink models ────────────────────────────────────────────
-    st.markdown(f'''<h3 style="border-left:4px solid {C["purple"]};padding-left:10px;">⚡ MATLAB/Simulink Models</h3>''', unsafe_allow_html=True)
+    st.markdown(f'<h3 style="border-left:4px solid {C["good"]};padding-left:10px;color:{C["good"]}">⚡ MATLAB/Simulink Models</h3>', unsafe_allow_html=True)
     simulink_files = [
         ("Capstone_30V_Prototype.slx",  "30 V Prototype — Simulink Model",
          "MATLAB/Simulink circuit model of the 30 V bench prototype. Validates measured currents and wattages at load-bus and midline-bus PV locations."),
@@ -3581,10 +3804,10 @@ def page_excel_data():
          "MATLAB/Simulink circuit model of the 120 V bench prototype. Demonstrates that PV location has negligible effect at higher supply voltages."),
     ]
     for fname, title, desc in simulink_files:
-        _render_file(fname, title, desc, "⚡", "application/octet-stream", accent=C["purple"])
+        _render_file(fname, title, desc, "⚡", "application/octet-stream", accent=C["good"])
 
     # ── Python scripts ─────────────────────────────────────────────
-    st.markdown(f'''<h3 style="border-left:4px solid #7678ed;padding-left:10px;">🐍 Python Scripts</h3>''', unsafe_allow_html=True)
+    st.markdown(f'<h3 style="border-left:4px solid {C["blue"]};padding-left:10px;color:{C["blue"]}">🐍 Python Scripts</h3>', unsafe_allow_html=True)
     py_files = [
         ("app.py",             "Dashboard App",        "Main Streamlit dashboard application (this file)."),
         ("capstoneV8.ipynb",  "capstoneV8 (Jupyter Notebook)", "Capstone notebook — PSSE automation and data analysis (version 8)."),
@@ -3597,7 +3820,7 @@ def page_excel_data():
         _render_file(fname, title, desc, "🐍", PY_MIME, accent=C["blue"])
 
     # ── PDF reports ─────────────────────────────────────────────────
-    st.markdown(f'''<h3 style="border-left:4px solid #ffa600;padding-left:10px;">📄 Reports</h3>''', unsafe_allow_html=True)
+    st.markdown(f'<h3 style="border-left:4px solid {C["gold"]};padding-left:10px;color:{C["gold"]}">📄 Reports</h3>', unsafe_allow_html=True)
     pdf_files = [
         ("Design-Validation-Test-Plan-Report-Group4.pdf", "Design Validation & Test Plan Report",
          "Full design validation and test plan report for the capstone project."),
@@ -3610,7 +3833,7 @@ def page_excel_data():
         _render_file(fname, title, desc, "📄", PDF_MIME, accent=C["gold"])
 
     # ── Image / Media files ───────────────────────────────────────────────────
-    st.markdown(f'''<h3 style="border-left:4px solid {C["pink"]};padding-left:10px;">🖼 Images & Media</h3>''', unsafe_allow_html=True)
+    st.markdown(f'<h3 style="border-left:4px solid {C["pink"]};padding-left:10px;color:{C["pink"]}">🖼 Images & Media</h3>', unsafe_allow_html=True)
     img_files = [
         ("SunCases.png",            "Sun Cases — P & Q Curves",
          "Hourly active power (P) and reactive power availability (Q) for Sunny, Moderate, and Cloudy days. Used to define the three sun rating scenarios."),
@@ -3692,10 +3915,10 @@ def page_design():
                 annotation_text="2% target", annotation_position="bottom right",
                 annotation_font_size=10)
         lay = base_layout(title, height=height)
-        lay["margin"] = dict(l=20, r=20, t=52, b=105)
+        lay["margin"] = dict(l=20, r=20, t=52, b=125)
         lay["showlegend"] = True
         lay["legend"] = dict(
-            orientation="h", yanchor="top", y=-0.28,
+            orientation="h", yanchor="top", y=-0.42,
             xanchor="center", x=0.5, font=dict(size=10),
             bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
         f.update_layout(**lay)
@@ -3993,9 +4216,9 @@ def page_design():
                 fill="tozeroy", fillcolor="rgba(184,108,224,0.08)"))
             fi.add_hline(y=100, line_dash="dot", line_color=C["warn"], annotation_text="100% peak (hr 18)")
             _fi_lay = base_layout("Average Hourly Demand in 2024 (% of Peak)", height=340)
-            _fi_lay["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+            _fi_lay["legend"] = dict(orientation="h", yanchor="top", y=-0.42, xanchor="center", x=0.5,
                 font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
-            _fi_lay["margin"] = dict(l=20, r=20, t=52, b=105)
+            _fi_lay["margin"] = dict(l=20, r=20, t=52, b=125)
             fi.update_layout(**_fi_lay)
             fi.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
             fi.update_yaxes(title="% of Peak Demand")
@@ -4006,9 +4229,9 @@ def page_design():
                 marker_color=[C["purple"] if v == max(IESO_AVG_MW) else C["blue"] for v in IESO_AVG_MW],
                 opacity=0.85))
             _fi2_lay = base_layout("Average Ontario Demand by Hour in 2024 (MW)", height=340)
-            _fi2_lay["legend"] = dict(orientation="h", yanchor="top", y=-0.28, xanchor="center", x=0.5,
+            _fi2_lay["legend"] = dict(orientation="h", yanchor="top", y=-0.42, xanchor="center", x=0.5,
                 font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
-            _fi2_lay["margin"] = dict(l=20, r=20, t=52, b=105)
+            _fi2_lay["margin"] = dict(l=20, r=20, t=52, b=125)
             fi2.update_layout(**_fi2_lay)
             fi2.update_xaxes(title="Hour of Day", tickvals=list(range(1,25,2)))
             fi2.update_yaxes(title="Average MW")
@@ -4077,7 +4300,7 @@ def page_design():
                 text=f"P and Q Curves of Solar Farm on<br><b style=\'color:{title_color};\'>{title}</b> in p.u.",
                 x=0.5, xanchor="center", font=dict(size=13, color=C["deep"]))
             lay["margin"] = dict(l=10, r=10, t=70, b=40)
-            lay["legend"] = dict(orientation="h", yanchor="top", y=-0.30, x=0.5, xanchor="center", font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
+            lay["legend"] = dict(orientation="h", yanchor="top", y=-0.42, x=0.5, xanchor="center", font=dict(size=10), bgcolor="rgba(255,255,255,0.9)", bordercolor=C["border"], borderwidth=1)
             f.update_layout(**lay)
             f.update_xaxes(title="Hour", tickvals=[1,6,11,16,21], range=[1,24])
             f.update_yaxes(title="p.u.", range=[0, 1.25])
