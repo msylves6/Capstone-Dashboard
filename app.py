@@ -2098,7 +2098,48 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
             f"Constant-Z reaches <b>${float(_cumul_z[-1]):,.2f}</b> by end of day.")
 
 
-
+ 
+# ── PAGE: REFERENCES ─────────────────────────────────────────
+def page_references():
+    section_heading("References","All sources cited in this capstone project.")
+    panel("Proposal References","""
+    <p>[1] Independent Electricity System Operator (IESO), "Electricity Demand in Ontario to Grow by 75 per cent by 2050," News &amp; Updates, 16 Oct. 2024. [Online]. Available: https://www.ieso.ca/Corporate-IESO/Media/News-Releases/2024/10/Electricity-Demand-in-Ontario-to-Grow-by-75-per-cent-by-2050.</p>
+    <p>[2] Y. Li, C. Wang, and G. Li, "A Mini-Review on High-Penetration Renewable Integration Into a Smarter Grid," <em>Frontiers in Energy Research</em>, vol. 8, p. 84, May 2020. [Online]. Available: https://www.frontiersin.org/articles/10.3389/fenrg.2020.00084/full.</p>
+    <p>[3] Physicians, Scientists, and Engineers for Healthy Energy, <em>Peaker Plant Mapping Project: Technical Documentation</em>, Apr. 2023. [Online]. Available: https://www.psehealthyenergy.org/wp-content/uploads/2023/04/Peaker-Technical-Documentation.pdf.</p>
+    <p>[4] R. Varma. ECE 4464, Class Lecture, Topic: "Conservation Voltage Reduction". Department of Electrical and Computer Engineering, Western University, London, ON, Canada. Sept. 5, 2025.</p>
+    <p>[5] American National Standard for Electric Power Systems and Equipment—Voltage Ratings (60 Hz), ANSI C84.1-2020, American National Standards Institute, New York, NY, USA, 2020.</p>
+    <p>[6] Independent Electricity System Operator, "Power Data," IESO. [Online]. Available: https://www.ieso.ca/power-data.</p>
+    <p>[7] F. Ding and M. Baggu, "Coordinated use of smart inverters with legacy voltage regulating devices in distribution systems with high distributed PV penetration—increase CVR energy savings," NREL, Tech. Rep. NREL/TP-5D00-81454, 2021. [Online]. https://www.nrel.gov/docs/fy21osti/81454.pdf.</p>
+    <p>[8] Independent Electricity System Operator, <em>Transmission Planning Guideline – Consideration of Losses in the Transmission Planning Process</em>, July 22, 2021. [Online]. Available: https://www.ieso.ca/-/media/Files/IESO/Document-Library/engage/tl/tl-20210722-transmission-planning-guideline-consideration-of-losses.pdf.</p>
+    <p>[9] E. Law, "3 types of line losses in power transmission," Cence Power Blog, Dec. 20, 2022. [Online]. Available: https://www.cencepower.com/blog-posts/line-losses-power-transmission-3types.</p>
+    <p>[10] Office of Energy Efficiency and Renewable Energy, "Solar integration: inverters and grid services basics," Energy.gov, 2024. [Online]. Available: https://www.energy.gov/eere/solar/solar-integration-inverters-and-grid-services-basics.</p>
+    <p>[11] R. K. Varma, <em>Smart Solar PV Inverters with Advanced Grid Support Functionalities</em>, 1st ed., Wiley-IEEE Press, Hoboken, NJ, USA, 2021.</p>
+    <p>[12] R. K. Varma, K. B. Nanavati, and S. Mohan, "Simultaneous line loss minimization and CVR with smart inverter control of BESS and PV system as STATCOM," in <em>Proc. IEEE Power &amp; Energy Society General Meeting (PESGM)</em>, Montreal, QC, Canada, Aug. 2020. [Online]. Available: https://doi.org/10.1109/PESGM41954.2020.9281510.</p>
+    <p>[13] R. K. Varma, T. Hartley, S. Mohan, A. Royal, F. Sara, D. Sarin, and S. Williams, "Utility energy savings by novel smart inverter control of PV systems, BESS and EV charging stations as STATCOMs," <em>Proc. CIGRE Canada Conf.</em>, Toronto, ON, Canada, Oct. 19–22, 2020. [Online]. Available: https://www.cigre.ca/papers/utility-energy-savings-by-novel-smart-inverter-control-of-pv-systems-bess-and-ev-charging-stations-as-statcoms.</p>
+    <p>[14] Electrical4U, "Load flow or power flow analysis," Electrical4U, Oct. 27, 2020. [Online]. Available: https://www.electrical4u.com/load-flow-or-power-flow-analysis/.</p>
+    <p>[15] IEEE Standard for Interconnection and Interoperability of Distributed Energy Resources with Associated Electric Power Systems Interfaces, IEEE Std 1547-2018, Apr. 2018. [Online]. Available: https://doi.org/10.1109/IEEESTD.2018.8332112.</p>
+    <p>[16] IEEE Standard for Interconnection and Interoperability of Inverter-Based Resources (IBRs) Interconnecting with Associated Transmission Electric Power Systems, IEEE Std 2800-2022, Apr. 2022. [Online]. Available: https://doi.org/10.1109/IEEESTD.2022.9783135.</p>
+    <p>[17] Power Systems Test Case Archive, "IEEE 14-Bus Test System," University of Washington. [Online]. Available: https://labs.ece.uw.edu/pstca/pf14/pg_tca14bus.htm.</p>
+    <p>[18] Independent Electricity System Operator (IESO), "Electricity demand in Ontario to grow by 75 per cent by 2050," IESO, Toronto, ON, Canada. [Online]. Available: https://www.ieso.ca/en/Sector-Participants/Planning-and-Forecasting/Demand-Forecasts.</p>
+    <p>[19] GridLAB-D Project, "Power Flow User Guide," GridLAB-D Documentation. [Online]. Available: https://gridlab-d.shoutwiki.com/wiki/Power_Flow_User_Guide.</p>
+    <p>[20] DIgSILENT GmbH, "PowerFactory – Downloads and Documentation," DIgSILENT PowerFactory Documentation Portal. [Online]. Available: https://www.digsilent.de/en/downloads.html.</p>""")
+ 
+    panel("Additional References","""
+    <p>[21] Electric Power Research Institute (EPRI), "OpenDSS Power Flow Overview," OpenDSS Documentation. [Online]. Available: https://opendss.epri.com/PowerFlow.html.</p>
+    <p>[22] Siemens Energy, "PSS®E—Power Transmission System Planning Software," Siemens Product Documentation. [Online]. Available: https://www.siemens.com/global/en/products/energy/grid-software/planning/pss-software/planning/pss-e.html.</p>
+    <p>[23] PowerWorld Corporation, "PowerWorld Simulator User Guide, Version 11," PowerWorld Documentation. [Online]. Available: https://www.powerworld.com/files/pw110UserGuide.pdf.</p>
+    <p>[24] The MathWorks, Inc., "MATLAB and Simulink Documentation," MATLAB &amp; Simulink User Documentation. [Online]. Available: https://www.mathworks.com/help/.</p>
+    <p>[25] Manitoba HVDC Research Centre, "PSCAD—Electromagnetic Transient Simulation Software," PSCAD User Documentation. [Online]. Available: https://www.pscad.com/software/pscad.</p>
+    <p>[26] DIgSILENT GmbH, "PowerFactory Dynamic Simulation (RMS)," DIgSILENT PowerFactory Documentation. [Online]. Available: https://www.digsilent.de/en/powerfactory.html.</p>
+    <p>[27] PowerWorld Corporation, "PowerWorld Simulator: Dynamic Simulation," PowerWorld Simulator Documentation. [Online]. Available: https://www.powerworld.com/products/simulator/dynamics.</p>
+    <p>[28] Manitoba HVDC Research Centre, a division of Manitoba Hydro International Ltd., <em>IEEE 14 Bus System</em>, Technical Note, Dec. 30, 2014. [Online]. Available: https://www.pscad.com/knowledge-base/download/ieee_14_bus_technical_note.pdf.</p>
+    <p>[29] A. Mahendru and R. K. Varma, "Reduction in system losses and power demand by combination of optimal power flow and conservation voltage reduction using smart PV inverters," in <em>Proc. IEEE Power &amp; Energy Society General Meeting (PESGM)</em>, Atlanta, GA, USA, Aug. 2019.</p>
+    <p>[30] Independent Electricity System Operator (IESO), "Hourly Demand Report," IESO Public Reports Site. [Online]. Available: https://reports-public.ieso.ca/public/Demand/.</p>
+    <p>[31] Independent Electricity System Operator (IESO), "Contract Data and Reports," IESO, Ontario, Canada. [Online]. Available: https://www.ieso.ca/Sector-Participants/Resource-Acquisition-and-Contracts/Contract-Data-and-Reports.</p>
+    <p>[32] Independent Electricity System Operator (IESO), <em>Generator Output by Fuel Type Hourly Report – 2025</em>. Ontario, Canada, 2025. [Online].</p>
+    <p>[33] Independent Electricity System Operator (IESO), "Supply Mix and Generation," Ontario Electricity Grid. [Online]. Available: https://www.ieso.ca/Learn/Ontario-Electricity-Grid/Supply-Mix-and-Generation.</p>
+    <p>[34] Rajiv K. Varma, "Use of Distributed Generator (DG) Inverters as STATCOMs for Decreasing Line Losses," US Patent No. 9,436,200, issued September 6, 2016.</p>""")
+ 
 def page_ieee_results(ieee):
     section_heading(
         "IEEE 14-Bus System — Study Results",
@@ -4404,18 +4445,15 @@ def page_design():
 
 
 
-
-# ── SIDEBAR ────────────────────────────────────────────────────
-def sidebar_menu() -> str:
+# ── SIDEBAR + MAIN ────────────────────────────────────────────
+def sidebar_menu():
     st.sidebar.markdown(f"""
     <div style="padding:0.4rem 0 0.8rem 0;">
-        <div style="font-size:0.75rem;color:{C["purple"]};font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">
-            ECE 4416 · Group 4
-        </div>
+        <div style="font-size:0.75rem;color:{C["purple"]};font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">ECE 4416 · Group 4</div>
         <div style="font-size:1.25rem;font-weight:800;color:{C["deep"]};margin-top:0.2rem;">CVR Dashboard</div>
         <div style="font-size:0.85rem;color:{C["muted"]};margin-top:0.15rem;">Western University</div>
     </div>""", unsafe_allow_html=True)
-    return st.sidebar.radio("Menu", [
+    return st.sidebar.radio("Menu",[
         "Problem Statement",
         "Dx Feeder Results",
         "IEEE 14-Bus Results",
@@ -4423,7 +4461,9 @@ def sidebar_menu() -> str:
         "Forecasting Model",
         "Prototype",
         "Files",
+        "References",
     ], index=0)
+ 
 
 # ── MAIN ──────────────────────────────────────────────────────
 try:
@@ -4434,6 +4474,7 @@ except Exception as e:
 
 selected_page = sidebar_menu()
 
+ 
 if selected_page == "Problem Statement":
     page_about()
 elif selected_page == "Dx Feeder Results":
@@ -4448,6 +4489,8 @@ elif selected_page == "Files":
     page_excel_data()
 elif selected_page == "Design Thought Process":
     page_design()
-
+elif selected_page == "References":
+    page_references()
+ 
 section_footnote()
 
