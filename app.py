@@ -251,6 +251,23 @@ def section_heading(title: str, subtitle: str = "") -> None:
 def show_chart(fig) -> None:
     st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
 
+def section_footnote() -> None:
+    st.markdown(
+        """
+        <div style="
+            margin-top: 0.75rem;
+            padding-top: 0.45rem;
+            border-top: 1px solid #EDE0FA;
+            font-size: 0.78rem;
+            color: #59536B;
+        ">
+        Footnote: Rajiv K. Varma, “Use of Distributed Generator (DG) Inverters as STATCOMs
+        for Decreasing Line Losses”, US Patent No. 9,436,200, issued September 6, 2016.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
 # ── DATA LOADING ─────────────────────────────────────────────
 def make_unique_columns(cols) -> List[str]:
     out, seen = [], {}
@@ -4431,3 +4448,6 @@ elif selected_page == "Files":
     page_excel_data()
 elif selected_page == "Design Thought Process":
     page_design()
+
+section_footnote()
+
