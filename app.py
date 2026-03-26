@@ -4430,8 +4430,6 @@ except Exception as e:
 
 selected_page = sidebar_menu()
 
-selected_page = sidebar_menu()
-
 if selected_page == "Problem Statement":
     page_about()
 elif selected_page == "Dx Feeder Results":
