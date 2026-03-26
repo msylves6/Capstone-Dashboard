@@ -2098,6 +2098,51 @@ def page_dx_results(constz_raw, constz, cost_dx, cost_full):
             f"Constant-Z reaches <b>${float(_cumul_z[-1]):,.2f}</b> by end of day.")
 
 
+
+def page_ieee_results(ieee):
+    section_heading(
+        "IEEE 14-Bus System — Study Results",
+        "Load flow studies on the IEEE 14-bus standard test network across 168 cases. "
+        "Residential and commercial loads at buses 4, 9, and 14 — average 2.44% CVR reduction."
+    )
+
+    k1, k2, k3, k4 = st.columns(4)
+    with k1: kpi("Average CVR Reduction", "2.44%", "Average across all 168 IEEE 14-bus cases")
+    with k2: kpi("Total Simulation Cases (IEEE)", "168", "7 PV farm size and sun condition combinations × 24 hours")
+    with k3: kpi("Key Load Buses", "4, 9, 14", "Three largest non-industrial loads — commercial and residential")
+    with k4: kpi("PV Farm Sizes Tested", "10.526 / 52.632 / 105.263 MVA", "Small (10 MW), Medium (50 MW), Large (100 MW)")
+
+    panel("Key Takeaways — IEEE 14-Bus", f"""
+    <p>The IEEE 14-bus study confirmed: <b>CVR extends effectively to meshed transmission/sub-transmission networks.</b></p>
+    <p><b>Key findings from the IEEE 14-bus system:</b><br>
+    &#8226; Average CVR reduction: <b>2.44%</b> — exceeds the 2% design requirement.<br>
+    &#8226; Best configuration: Medium PV at Bus 4 + small PV at buses 9 and 14 — all buses exceed 2%.
+    Bus 14 (most downstream, residential) consistently achieves the highest % reduction (~3.5%).<br>
+    &#8226; Concentrating reactive power at one bus (Bus 4 only) leaves Bus 9 and 14 below 2% — not sufficient.<br>
+    &#8226; Equal sizing across all three buses is suboptimal, because Bus 4 and Bus 9 reductions are below 2%.<br>
+    &#8226; All 168 cases maintained voltage within the 0.95&#8211;1.05 pu safe band.</p>
+    """)
+
+    panel("IEEE 14-Bus System Design", """
+    <p>
+        The <b>IEEE 14-bus system</b> is a standardized benchmark network containing 14 buses, 5 generators,
+        and multiple transmission lines. Our group modified it so all bus voltages above 1.05 pu were capped
+        to satisfy ANSI C84.1. Each load was classified as residential, industrial, or commercial.
+    </p>
+    <p>
+        <b>Industrial loads</b> (buses 2, 3) behave as constant power — unaffected by voltage, so CVR has minimal effect.
+        <b>Commercial loads</b> (buses 4, 5) are a mix of constant power, current, and impedance.
+        <b>Residential loads</b> (buses 6, 9–14) are primarily constant current — load scales linearly with voltage,
+        making them good CVR candidates.
+    </p>
+    <p>
+        <b>Focus buses 4, 9, and 14</b> were the three largest non-industrial loads. PV farms were placed in
+        7 distinct size combinations at these buses to find the best-performing configuration.
+        <b>Key finding:</b> Bus 14 achieved the highest MW reduction — electrically weaker downstream buses
+        benefit most from reactive power support, consistent with the Dx feeder result.
+    </p>
+    """)
+
     render_image("img_ieee",
         "IEEE 14-Bus System in PSSE — key load buses 4, 9, and 14 highlighted",
         max_width="90%")
@@ -3845,7 +3890,6 @@ def page_excel_data():
             </div>
         </div>""", unsafe_allow_html=True)
 
-
 # ── PAGE: REFERENCES ─────────────────────────────────────────
 def page_references():
     section_heading("References","All sources cited in this capstone project.")
@@ -3886,7 +3930,6 @@ def page_references():
     <p>[32] Independent Electricity System Operator (IESO), <em>Generator Output by Fuel Type Hourly Report – 2025</em>. Ontario, Canada, 2025. [Online].</p>
     <p>[33] Independent Electricity System Operator (IESO), "Supply Mix and Generation," Ontario Electricity Grid. [Online]. Available: https://www.ieso.ca/Learn/Ontario-Electricity-Grid/Supply-Mix-and-Generation.</p>
     <p>[34] Rajiv K. Varma, "Use of Distributed Generator (DG) Inverters as STATCOMs for Decreasing Line Losses," US Patent No. 9,436,200, issued September 6, 2016.</p>""")
- 
 
 # ── PAGE: DESIGN THOUGHT PROCESS ─────────────────────────────
 def page_design():
@@ -4401,6 +4444,7 @@ def page_design():
 
 
 
+ 
 # ── SIDEBAR + MAIN ────────────────────────────────────────────
 def sidebar_menu():
     st.sidebar.markdown(f"""
@@ -4420,7 +4464,6 @@ def sidebar_menu():
         "References",
     ], index=0)
  
-
 # ── MAIN ──────────────────────────────────────────────────────
 try:
     constz_raw, zip_df, zip_analysis, ieee, cost_dx, cost_full, consti_raw = load_data()
