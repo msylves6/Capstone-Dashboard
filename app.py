@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 import re
 import base64
 import textwrap
@@ -15,6 +16,8 @@ from plotly.subplots import make_subplots
 import streamlit as st
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor
 from sklearn.impute import SimpleImputer
@@ -722,6 +725,7 @@ class AICfg:
 
 AI_CFG = AICfg()
 OPEN_METEO_FORECAST = "https://api.open-meteo.com/v1/forecast"
+WEATHER_CACHE_FILE = Path(BASE_DIR) / ".weather_cache_london_tomorrow.csv"
 
 WEATHER_CODE_MAP = {
     0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
@@ -732,71 +736,206 @@ WEATHER_CODE_MAP = {
 }
 
 def weather_code_to_text(code: Any) -> str:
-    try: return WEATHER_CODE_MAP.get(int(code), "Unknown")
-    except: return "Unknown"
+    try:
+        return WEATHER_CODE_MAP.get(int(code), "Unknown")
+    except Exception:
+        return "Unknown"
 
 def weather_family(text: str) -> str:
     s = str(text).lower()
-    if "snow" in s: return "snow"
-    if "rain" in s or "drizzle" in s or "shower" in s: return "rainy"
-    if "clear" in s or "sun" in s: return "sunny"
-    if "cloud" in s or "overcast" in s: return "cloudy"
+    if "snow" in s:
+        return "snow"
+    if "rain" in s or "drizzle" in s or "shower" in s:
+        return "rainy"
+    if "clear" in s or "sun" in s:
+        return "sunny"
+    if "cloud" in s or "overcast" in s:
+        return "cloudy"
     return "mixed"
 
 def cloud_to_sun_rating(cloud_pct: float) -> str:
-    if pd.isna(cloud_pct): return "unknown"
-    if cloud_pct < 10: return "very sunny"
-    if cloud_pct < 35: return "sunny"
-    if cloud_pct < 70: return "partly cloudy"
+    if pd.isna(cloud_pct):
+        return "unknown"
+    if cloud_pct < 10:
+        return "very sunny"
+    if cloud_pct < 35:
+        return "sunny"
+    if cloud_pct < 70:
+        return "partly cloudy"
     return "cloudy"
 
 def hour_cyclical(hours: pd.Series) -> Tuple[pd.Series, pd.Series]:
     rad = 2 * np.pi * hours / 24.0
     return np.sin(rad), np.cos(rad)
 
-@st.cache_data(show_spinner=False, ttl=3600)
-def load_open_meteo_forecast() -> pd.DataFrame:
-    params = {
-        "latitude": AI_CFG.weather_lat, "longitude": AI_CFG.weather_lon,
-        "hourly": ",".join(["temperature_2m", "relative_humidity_2m", "precipitation", "cloud_cover", "wind_speed_10m", "weather_code"]),
-        "forecast_days": 3, "timezone": "auto", "temperature_unit": "celsius",
-        "wind_speed_unit": "kmh", "precipitation_unit": "mm",
+def _requests_session() -> requests.Session:
+    retry = Retry(
+        total=4,
+        backoff_factor=1.2,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["GET"],
+        raise_on_status=False,
+        respect_retry_after_header=True,
+    )
+    session = requests.Session()
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+    session.headers.update({"User-Agent": "Western-CVR-Capstone-Dashboard/1.0"})
+    return session
+
+def _normalize_weather_df(df: pd.DataFrame, target_date: Optional[str] = None) -> pd.DataFrame:
+    df = df.copy()
+
+    if "time" in df.columns:
+        df["time"] = pd.to_datetime(df["time"], errors="coerce")
+    else:
+        if "hour" not in df.columns:
+            df["hour"] = range(1, 25)
+        if target_date is None:
+            target_date = str(pd.Timestamp.today().date())
+        df["time"] = pd.to_datetime(target_date) + pd.to_timedelta(df["hour"] - 1, unit="h")
+
+    if "hour" not in df.columns:
+        df["hour"] = df["time"].dt.hour + 1
+
+    numeric_defaults = {
+        "temperature_c": 12.0,
+        "humidity_pct": 65.0,
+        "precip_mm": 0.0,
+        "cloud_cover_pct": 50.0,
+        "wind_speed_kph": 12.0,
+        "weather_code": 2,
     }
-    r = requests.get(OPEN_METEO_FORECAST, params=params, timeout=AI_CFG.weather_timeout_sec)
-    r.raise_for_status()
-    hourly = r.json().get("hourly", {})
-    df = pd.DataFrame({
-        "time": hourly.get("time", []), "temperature_c": hourly.get("temperature_2m", []),
-        "humidity_pct": hourly.get("relative_humidity_2m", []), "precip_mm": hourly.get("precipitation", []),
-        "cloud_cover_pct": hourly.get("cloud_cover", []), "wind_speed_kph": hourly.get("wind_speed_10m", []),
-        "weather_code": hourly.get("weather_code", []),
-    })
-    if df.empty: raise ValueError("Open-Meteo forecast returned no data.")
-    df["time"] = pd.to_datetime(df["time"], errors="coerce")
-    df = df.dropna(subset=["time"]).copy()
-    df["date"] = df["time"].dt.date
-    unique_dates = sorted(df["date"].unique())
-    target_date = unique_dates[1] if len(unique_dates) >= 2 else unique_dates[0]
-    df = df[df["date"] == target_date].copy()
-    df["hour"] = df["time"].dt.hour + 1
+
+    for col, default in numeric_defaults.items():
+        if col not in df.columns:
+            df[col] = default
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    full = pd.DataFrame({"hour": range(1, 25)})
+    df = full.merge(df, on="hour", how="left")
+
+    for col, default in numeric_defaults.items():
+        df[col] = df[col].interpolate(limit_direction="both")
+        df[col] = df[col].fillna(default)
+
+    if "time" not in df.columns or df["time"].isna().all():
+        base_date = pd.to_datetime(target_date or str(pd.Timestamp.today().date()))
+        df["time"] = base_date + pd.to_timedelta(df["hour"] - 1, unit="h")
+    else:
+        df["time"] = pd.to_datetime(df["time"], errors="coerce")
+        if df["time"].isna().any():
+            base_date = pd.to_datetime(target_date or str(pd.Timestamp.today().date()))
+            fill_times = base_date + pd.to_timedelta(df["hour"] - 1, unit="h")
+            df["time"] = df["time"].fillna(fill_times)
+
+    df["weather_code"] = df["weather_code"].round().astype(int)
     df["weather_condition"] = df["weather_code"].apply(weather_code_to_text)
     df["weather_family"] = df["weather_condition"].apply(weather_family)
     df["sun_rating"] = df["cloud_cover_pct"].apply(cloud_to_sun_rating)
-    df["day_type"] = "weekend" if pd.Timestamp(target_date).weekday() >= 5 else "weekday"
-    df["location"] = "London, Ontario, Canada"; df["forecast_date"] = str(target_date)
-    if len(df) != 24:
-        full = pd.DataFrame({"hour": range(1, 25)})
-        df = full.merge(df, on="hour", how="left")
-        for col in ["temperature_c", "humidity_pct", "cloud_cover_pct", "wind_speed_kph"]:
-            df[col] = pd.to_numeric(df[col], errors="coerce").interpolate().bfill().ffill()
-        df["precip_mm"] = pd.to_numeric(df["precip_mm"], errors="coerce").fillna(0.0)
-        df["weather_code"] = pd.to_numeric(df["weather_code"], errors="coerce").bfill().ffill().fillna(0).astype(int)
-        df["weather_condition"] = df["weather_code"].apply(weather_code_to_text)
-        df["weather_family"] = df["weather_condition"].apply(weather_family)
-        df["sun_rating"] = df["cloud_cover_pct"].apply(cloud_to_sun_rating)
-        df["day_type"] = df["day_type"].fillna("weekday")
-        df["location"] = "London, Ontario, Canada"; df["forecast_date"] = str(target_date)
+    df["date"] = df["time"].dt.date
+    df["forecast_date"] = str(df["date"].iloc[0])
+    df["day_type"] = "weekend" if pd.Timestamp(df["forecast_date"].iloc[0]).weekday() >= 5 else "weekday"
+    df["location"] = "London, Ontario, Canada"
     return df.sort_values("hour").reset_index(drop=True)
+
+def _fallback_weather_from_training() -> pd.DataFrame:
+    target_date = str((pd.Timestamp.today() + pd.Timedelta(days=1)).date())
+    hours = np.arange(1, 25)
+    temp = 11 + 6 * np.sin(2 * np.pi * (hours - 8) / 24)
+    humidity = 72 - 12 * np.sin(2 * np.pi * (hours - 8) / 24)
+    cloud = np.clip(55 + 20 * np.sin(2 * np.pi * (hours + 2) / 24), 15, 95)
+    wind = np.clip(14 + 4 * np.sin(2 * np.pi * (hours - 3) / 24), 5, 30)
+    fallback = pd.DataFrame({
+        "hour": hours,
+        "temperature_c": temp,
+        "humidity_pct": humidity,
+        "precip_mm": np.zeros(24),
+        "cloud_cover_pct": cloud,
+        "wind_speed_kph": wind,
+        "weather_code": np.where(cloud < 30, 1, np.where(cloud < 70, 2, 3)),
+    })
+    return _normalize_weather_df(fallback, target_date=target_date)
+
+def _save_weather_cache(df: pd.DataFrame) -> None:
+    try:
+        df.to_csv(WEATHER_CACHE_FILE, index=False)
+    except Exception:
+        pass
+
+def _load_weather_cache() -> Optional[pd.DataFrame]:
+    try:
+        if WEATHER_CACHE_FILE.exists():
+            cached = pd.read_csv(WEATHER_CACHE_FILE)
+            return _normalize_weather_df(cached)
+    except Exception:
+        pass
+    return None
+
+@st.cache_data(show_spinner=False, ttl=21600)
+def load_open_meteo_forecast() -> pd.DataFrame:
+    params = {
+        "latitude": AI_CFG.weather_lat,
+        "longitude": AI_CFG.weather_lon,
+        "hourly": ",".join([
+            "temperature_2m",
+            "relative_humidity_2m",
+            "precipitation",
+            "cloud_cover",
+            "wind_speed_10m",
+            "weather_code",
+        ]),
+        "forecast_days": 3,
+        "timezone": "auto",
+        "temperature_unit": "celsius",
+        "wind_speed_unit": "kmh",
+        "precipitation_unit": "mm",
+    }
+
+    session = _requests_session()
+
+    try:
+        r = session.get(OPEN_METEO_FORECAST, params=params, timeout=AI_CFG.weather_timeout_sec)
+        if r.status_code == 429:
+            raise requests.HTTPError("429 Too Many Requests", response=r)
+        r.raise_for_status()
+        hourly = r.json().get("hourly", {})
+
+        raw = pd.DataFrame({
+            "time": hourly.get("time", []),
+            "temperature_c": hourly.get("temperature_2m", []),
+            "humidity_pct": hourly.get("relative_humidity_2m", []),
+            "precip_mm": hourly.get("precipitation", []),
+            "cloud_cover_pct": hourly.get("cloud_cover", []),
+            "wind_speed_kph": hourly.get("wind_speed_10m", []),
+            "weather_code": hourly.get("weather_code", []),
+        })
+
+        if raw.empty:
+            raise ValueError("Open-Meteo returned no hourly data.")
+
+        raw["time"] = pd.to_datetime(raw["time"], errors="coerce")
+        raw = raw.dropna(subset=["time"]).copy()
+        raw["date"] = raw["time"].dt.date
+        unique_dates = sorted(raw["date"].unique())
+        if not unique_dates:
+            raise ValueError("Open-Meteo returned invalid timestamps.")
+
+        target_date = unique_dates[1] if len(unique_dates) >= 2 else unique_dates[0]
+        tomorrow_df = raw[raw["date"] == target_date].copy()
+        weather_df = _normalize_weather_df(tomorrow_df, target_date=str(target_date))
+        _save_weather_cache(weather_df)
+        return weather_df
+
+    except Exception as e:
+        cached = _load_weather_cache()
+        if cached is not None:
+            st.info("Live weather API is temporarily unavailable. Using the most recent cached forecast.")
+            return cached
+        fallback = _fallback_weather_from_training()
+        st.warning(f"Live weather API unavailable ({e}). Using fallback weather profile so the dashboard still runs.")
+        return fallback
 
 # ── TRAINING DATA LOADER ─────────────────────────────────────────────────────
 TRAINING_DATA_FILENAME = "TrainingData.xlsx"
@@ -1026,61 +1165,6 @@ def predict_baseline_load(model_dict: Dict, forecast_df: pd.DataFrame) -> np.nda
     rf, et = model_dict['rf'], model_dict['et']
     return AI_CFG.blend_rf * rf.predict(X) + AI_CFG.blend_et * et.predict(X)
 
-
-# ── WEATHER ──────────────────────────────────────────────────────────────────
-WEATHER_CODE_MAP = {
-    0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
-    45: "Fog", 51: "Light drizzle", 53: "Moderate drizzle", 61: "Slight rain",
-    63: "Moderate rain", 65: "Heavy rain", 71: "Slight snow", 73: "Moderate snow",
-    80: "Slight showers", 81: "Moderate showers", 95: "Thunderstorm",
-}
-def weather_code_to_text(code):
-    try: return WEATHER_CODE_MAP.get(int(code), "Unknown")
-    except: return "Unknown"
-
-@st.cache_data(show_spinner=False, ttl=3600)
-def load_open_meteo_forecast() -> pd.DataFrame:
-    params = {
-        "latitude": AI_CFG.weather_lat, "longitude": AI_CFG.weather_lon,
-        "hourly": ",".join(["temperature_2m","relative_humidity_2m","precipitation",
-                             "cloud_cover","wind_speed_10m","weather_code"]),
-        "forecast_days": 3, "timezone": "auto",
-        "temperature_unit": "celsius", "wind_speed_unit": "kmh", "precipitation_unit": "mm",
-    }
-    r = requests.get("https://api.open-meteo.com/v1/forecast", params=params,
-                     timeout=AI_CFG.weather_timeout_sec)
-    r.raise_for_status()
-    hourly = r.json().get("hourly", {})
-    df = pd.DataFrame({
-        "time":           hourly.get("time", []),
-        "temperature_c":  hourly.get("temperature_2m", []),
-        "humidity_pct":   hourly.get("relative_humidity_2m", []),
-        "precip_mm":      hourly.get("precipitation", []),
-        "cloud_cover_pct":hourly.get("cloud_cover", []),
-        "wind_speed_kph": hourly.get("wind_speed_10m", []),
-        "weather_code":   hourly.get("weather_code", []),
-    })
-    df["time"] = pd.to_datetime(df["time"], errors="coerce")
-    df = df.dropna(subset=["time"])
-    df["date"] = df["time"].dt.date
-    dates = sorted(df["date"].unique())
-    target = dates[1] if len(dates) >= 2 else dates[0]
-    df = df[df["date"] == target].copy()
-    df["hour"] = df["time"].dt.hour + 1
-    df["weather_condition"] = df["weather_code"].apply(weather_code_to_text)
-    df["forecast_date"] = str(target)
-    df["location"] = "London, Ontario, Canada"
-    # Ensure 24 hours
-    if len(df) != 24:
-        full = pd.DataFrame({"hour": range(1, 25)})
-        df = full.merge(df, on="hour", how="left")
-        for col in ["temperature_c","humidity_pct","cloud_cover_pct","wind_speed_kph"]:
-            df[col] = pd.to_numeric(df[col], errors="coerce").interpolate().bfill().ffill()
-        df["precip_mm"] = pd.to_numeric(df["precip_mm"], errors="coerce").fillna(0.0)
-        df["weather_code"] = pd.to_numeric(df["weather_code"], errors="coerce").bfill().ffill().fillna(0).astype(int)
-        df["weather_condition"] = df["weather_code"].apply(weather_code_to_text)
-        df["forecast_date"] = str(target); df["location"] = "London, Ontario, Canada"
-    return df.sort_values("hour").reset_index(drop=True)
 
 
 # ── MAIN FORECAST BUILDER ─────────────────────────────────────────────────────
